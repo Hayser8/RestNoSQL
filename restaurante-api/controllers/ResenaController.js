@@ -8,15 +8,21 @@ const Resena = require('../models/Resena');
  */
 exports.createResena = async (req, res, next) => {
   try {
-    const { restauranteId, ordenId, calificacion, comentario } = req.body;
+    const {
+      restauranteId,
+      ordenId,
+      calificacion
+    } = req.body;
+
+    // Protegemos comentario de ser undefined
+    const comentario = req.body.comentario ? req.body.comentario.trim() : '';
 
     const newResena = await Resena.create({
-      usuarioId: req.user.id,           // forzamos el user desde el token
+      usuarioId: req.user.id,
       restauranteId,
       ordenId,
       calificacion,
-      comentario: comentario.trim()      // sanitize
-      // fecha: default en el modelo
+      comentario
     });
 
     res.status(201).json(newResena);
