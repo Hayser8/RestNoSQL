@@ -10,20 +10,17 @@ const Orden = require('../models/Orden');
  */
 exports.createOrden = async (req, res, next) => {
   try {
-    const { restauranteId, articulos } = req.body;
+    const { restauranteId, articulos = [] } = req.body;  // <-- default []
 
-    // Calcular total
-    const total = articulos.reduce((sum, item) => {
-      return sum + item.cantidad * item.precio;
-    }, 0);
+    // Calcular total sin error cuando articulos es undefined
+    const total = articulos.reduce((sum, item) => sum + item.cantidad * item.precio, 0);
 
     const nuevaOrden = new Orden({
       usuarioId: req.user.id,
       restauranteId,
       articulos,
       total,
-      estado: 'confirmado' // estado inicial
-      // fecha: default en el modelo
+      estado: 'confirmado'
     });
 
     const ordenGuardada = await nuevaOrden.save();
