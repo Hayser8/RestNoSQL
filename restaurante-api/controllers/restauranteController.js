@@ -1,3 +1,5 @@
+// controllers/restauranteController.js
+
 const Restaurante = require('../models/Restaurante');
 
 /**
@@ -35,15 +37,18 @@ exports.getRestauranteById = async (req, res, next) => {
  */
 exports.createRestaurante = async (req, res, next) => {
   try {
+    // Desestructuramos con valores por defecto
     const {
-      nombre,
-      direccion,
-      ubicacion: { lat, lng } = {},
-      telefono,
-      email,
-      horario
+      nombre = '',
+      direccion = '',
+      ubicacion = {},
+      telefono = '',
+      email = '',
+      horario = []
     } = req.body;
+    const { lat, lng } = ubicacion;
 
+    // Llamamos siempre a Restaurante.create, incluso si body está vacío
     const newRestaurante = await Restaurante.create({
       nombre: nombre.trim(),
       direccion: direccion.trim(),
@@ -51,9 +56,9 @@ exports.createRestaurante = async (req, res, next) => {
       telefono: telefono.trim(),
       email: email.trim(),
       horario: horario.map(h => ({
-        dia: h.dia.trim(),
-        apertura: h.apertura.trim(),
-        cierre: h.cierre.trim()
+        dia: h.dia ? h.dia.trim() : '',
+        apertura: h.apertura ? h.apertura.trim() : '',
+        cierre: h.cierre ? h.cierre.trim() : ''
       }))
     });
 
