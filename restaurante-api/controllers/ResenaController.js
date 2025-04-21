@@ -1,34 +1,56 @@
+// controllers/resenaController.js
+
 const Resena = require('../models/Resena');
 
-// Crear una nueva reseña
+/**
+ * POST /api/resenas
+ * Crear una nueva reseña (usuario autenticado)
+ */
 exports.createResena = async (req, res, next) => {
   try {
-    const newResena = new Resena(req.body);
-    const savedResena = await newResena.save();
-    res.status(201).json(savedResena);
+    const { restauranteId, ordenId, calificacion, comentario } = req.body;
+
+    const newResena = await Resena.create({
+      usuarioId: req.user.id,           // forzamos el user desde el token
+      restauranteId,
+      ordenId,
+      calificacion,
+      comentario: comentario.trim()      // sanitize
+      // fecha: default en el modelo
+    });
+
+    res.status(201).json(newResena);
   } catch (error) {
     next(error);
   }
 };
 
-// Obtener todas las reseñas (con populate de datos relevantes)
+/**
+ * GET /api/resenas
+ * Listar todas las reseñas (admin)
+ */
 exports.getResenas = async (req, res, next) => {
   try {
     const resenas = await Resena.find()
       .populate('usuarioId', 'nombre apellido')
-      .populate('restauranteId', 'nombre');
+      .populate('restauranteId', 'nombre')
+      .populate('ordenId', 'fecha');    // opcionalmente incluimos info de la orden
     res.json(resenas);
   } catch (error) {
     next(error);
   }
 };
 
-// Obtener una reseña por ID
+/**
+ * GET /api/resenas/:id
+ * Obtener una reseña por ID (admin)
+ */
 exports.getResenaById = async (req, res, next) => {
   try {
     const resena = await Resena.findById(req.params.id)
       .populate('usuarioId', 'nombre apellido')
-      .populate('restauranteId', 'nombre');
+      .populate('restauranteId', 'nombre')
+      .populate('ordenId', 'fecha');
     if (!resena) {
       return res.status(404).json({ message: 'Reseña no encontrada' });
     }
@@ -38,27 +60,41 @@ exports.getResenaById = async (req, res, next) => {
   }
 };
 
-// Actualizar una reseña por ID
+/**
+ * PUT /api/resenas/:id
+ * Actualizar una reseña por ID (admin)
+ */
 exports.updateResena = async (req, res, next) => {
   try {
-    const updatedResena = await Resena.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedResena) {
+    const updates = {};
+    if (req.body.calificacion !== undefined) updates.calificacion = req.body.calificacion;
+    if (req.body.comentario   !== undefined) updates.comentario   = req.body.comentario.trim();
+
+    const updated = await Resena.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    );
+    if (!updated) {
       return res.status(404).json({ message: 'Reseña no encontrada' });
     }
-    res.json(updatedResena);
+    res.json(updated);
   } catch (error) {
     next(error);
   }
 };
 
-// Eliminar una reseña por ID
+/**
+ * DELETE /api/resenas/:id
+ * Eliminar una reseña por ID (admin)
+ */
 exports.deleteResena = async (req, res, next) => {
   try {
-    const deletedResena = await Resena.findByIdAndDelete(req.params.id);
-    if (!deletedResena) {
+    const deleted = await Resena.findByIdAndDelete(req.params.id);
+    if (!deleted) {
       return res.status(404).json({ message: 'Reseña no encontrada' });
     }
-    res.json({ message: 'Reseña eliminada' });
+    res.json({ message: 'Reseña eliminada correctamente' });
   } catch (error) {
     next(error);
   }
