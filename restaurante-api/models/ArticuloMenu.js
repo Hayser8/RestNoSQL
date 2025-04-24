@@ -1,3 +1,4 @@
+// models/ArticuloMenu.js
 const mongoose = require('mongoose');
 
 const ArticuloMenuSchema = new mongoose.Schema({
@@ -27,7 +28,8 @@ const ArticuloMenuSchema = new mongoose.Schema({
     trim: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  collection: 'articulos_menu'  
 });
 
 module.exports = mongoose.model('ArticuloMenu', ArticuloMenuSchema);

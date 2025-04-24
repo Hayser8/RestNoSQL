@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
-// Definir el esquema para cada artículo del pedido
+// Subdocumento para los artículos de cada pedido
 const ArticuloSchema = new mongoose.Schema({
   menuItemId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: 'ArticuloMenu' // referencia al modelo del artículo del menú
+    ref: 'ArticuloMenu'
   },
   nombre: {
     type: String,
@@ -19,19 +19,19 @@ const ArticuloSchema = new mongoose.Schema({
     type: Number,
     required: true
   }
-}, { _id: false }); // No es necesario un _id para cada subdocumento
+}, { _id: false });
 
-// Definir el esquema para la Orden
+// Esquema principal para la colección "ordenes"
 const OrdenSchema = new mongoose.Schema({
   usuarioId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: 'Usuario' // referencia al modelo de Usuario
+    ref: 'Usuario'
   },
   restauranteId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: 'Restaurante' // referencia al modelo de Restaurante
+    ref: 'Restaurante'
   },
   fecha: {
     type: Date,
@@ -51,6 +51,9 @@ const OrdenSchema = new mongoose.Schema({
     type: [ArticuloSchema],
     required: true
   }
+}, {
+  collection: 'ordenes',  // fuerza el uso de "ordenes"
+  timestamps: false
 });
 
 module.exports = mongoose.model('Orden', OrdenSchema);
