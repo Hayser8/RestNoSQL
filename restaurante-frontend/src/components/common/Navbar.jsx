@@ -16,10 +16,8 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
-                BS
-              </div>
-              <span className="ml-2 text-xl font-bold text-blue-900">El Buen Sabor</span>
+              <img src="/logorest.png" className="w-10 h-10 rounded-full flex items-center justify-center"></img>
+              <span className="ml-2 text-xl font-bold text-blue-900">Mami's Restaurant</span>
             </Link>
           </div>
 
