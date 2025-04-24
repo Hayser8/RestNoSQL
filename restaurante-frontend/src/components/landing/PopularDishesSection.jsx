@@ -1,11 +1,26 @@
-// components/landing/PopularDishes.jsx
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 
-export default function PopularDishes() {
+export default function PopularDishesSection() {
+  const [dishes, setDishes] = useState([])
+
+  useEffect(() => {
+    fetch('/api/popular-dishes')
+      .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok')
+        return res.json()
+      })
+      .then(data => {
+        console.log('🛠 Debug – popular dishes fetched:', data)
+        setDishes(data)
+      })
+      .catch(err => console.error('Error fetching popular dishes:', err))
+  }, [])
+
   return (
     <section className="py-20 px-4 bg-[#F8FAFC]">
       <div className="max-w-7xl mx-auto">
@@ -22,89 +37,42 @@ export default function PopularDishes() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Dish 1 */}
-          <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="relative h-60 overflow-hidden">
-              <Image
-                src="/placeholder.svg?height=240&width=400"
-                width={400}
-                height={240}
-                alt="Paella Valenciana"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 right-4 bg-blue-600 rounded-md px-3 py-1 text-xs font-medium text-white">
-                Bestseller
+          {dishes.map((dish, idx) => (
+            <div
+              key={dish.id}
+              className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="relative h-60 overflow-hidden">
+                <Image
+                  src={dish.imagen || '/placeholder.png'}
+                  width={400}
+                  height={240}
+                  alt={dish.nombre}
+                  className="w-full h-full object-cover"
+                  unoptimized
+                />
+                <div className="absolute top-4 right-4 bg-blue-600 rounded-md px-3 py-1 text-xs font-medium text-white">
+                  Bestseller
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-xl font-medium text-blue-900">
+                    {dish.nombre}
+                  </h3>
+                  <div className="text-blue-600 font-medium">
+                    ${dish.precio.toFixed(2)}
+                  </div>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  {dish.descripcion}
+                </p>
+                <button className="w-full py-3 bg-blue-50 text-blue-600 font-medium rounded-md hover:bg-blue-100 transition-colors">
+                  Añadir al carrito
+                </button>
               </div>
             </div>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xl font-medium text-blue-900">Paella Valenciana</h3>
-                <div className="text-blue-600 font-medium">$18.99</div>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Auténtica paella con arroz, mariscos frescos, pollo y verduras de temporada.
-              </p>
-              <button className="w-full py-3 bg-blue-50 text-blue-600 font-medium rounded-md hover:bg-blue-100 transition-colors">
-                Añadir al carrito
-              </button>
-            </div>
-          </div>
-
-          {/* Dish 2 */}
-          <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="relative h-60 overflow-hidden">
-              <Image
-                src="/placeholder.svg?height=240&width=400"
-                width={400}
-                height={240}
-                alt="Risotto de Setas"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 right-4 bg-blue-600 rounded-md px-3 py-1 text-xs font-medium text-white">
-                Nuevo
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xl font-medium text-blue-900">Risotto de Setas</h3>
-                <div className="text-blue-600 font-medium">$15.99</div>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Cremoso risotto con variedad de setas silvestres, queso parmesano y hierbas frescas.
-              </p>
-              <button className="w-full py-3 bg-blue-50 text-blue-600 font-medium rounded-md hover:bg-blue-100 transition-colors">
-                Añadir al carrito
-              </button>
-            </div>
-          </div>
-
-          {/* Dish 3 */}
-          <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="relative h-60 overflow-hidden">
-              <Image
-                src="/placeholder.svg?height=240&width=400"
-                width={400}
-                height={240}
-                alt="Tacos de Carnitas"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 right-4 bg-blue-600 rounded-md px-3 py-1 text-xs font-medium text-white">
-                Popular
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xl font-medium text-blue-900">Tacos de Carnitas</h3>
-                <div className="text-blue-600 font-medium">$12.99</div>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Auténticos tacos mexicanos con carnitas, cebolla, cilantro y salsa casera picante.
-              </p>
-              <button className="w-full py-3 bg-blue-50 text-blue-600 font-medium rounded-md hover:bg-blue-100 transition-colors">
-                Añadir al carrito
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
 
         <div className="text-center mt-12">
