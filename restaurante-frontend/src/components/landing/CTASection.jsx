@@ -23,9 +23,7 @@ export default function CallToAction() {
                 className="flex items-center bg-white text-blue-900 px-6 py-3 rounded-md hover:bg-blue-50 transition-colors"
               >
                 {/* App Store SVG */}
-                <svg className="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.5,12.5c0-0.9,...Z" />
-                </svg>
+                <img src='/appstore.png' className="w-8 h-8 mr-3" alt="App Store" />
                 <div>
                   <div className="text-xs">Descargar en</div>
                   <div className="text-sm font-medium">App Store</div>
@@ -36,9 +34,7 @@ export default function CallToAction() {
                 className="flex items-center bg-white text-blue-900 px-6 py-3 rounded-md hover:bg-blue-50 transition-colors"
               >
                 {/* Google Play SVG */}
-                <svg className="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3.5,20.5c0.2,...Z" />
-                </svg>
+                <img src='/googleplay.png' className="w-7 h-7 mr-3" alt="Google Play" />
                 <div>
                   <div className="text-xs">Disponible en</div>
                   <div className="text-sm font-medium">Google Play</div>
@@ -56,7 +52,7 @@ export default function CallToAction() {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-xl font-medium text-white">Pide por teléfono</h3>
-                  <p className="text-blue-200">+34 123 456 789</p>
+                  <p className="text-blue-200">+502 0101 0101</p>
                 </div>
               </div>
 
