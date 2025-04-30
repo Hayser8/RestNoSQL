@@ -1,6 +1,7 @@
 // controllers/resenaController.js
 
 const Resena = require('../models/Resena');
+const Orden = require('../models/Orden') 
 
 /**
  * POST /api/resenas
@@ -105,3 +106,32 @@ exports.deleteResena = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /api/resenas/product/:menuItemId
+ * Listar las 5 mejores reseñas asociadas a un artículo del menú
+ */
+exports.getResenasByProducto = async (req, res, next) => {
+  try {
+    const { menuItemId } = req.params
+
+    // 1) Obtén solo los _id de las órdenes que incluyan ese menuItemId
+    const ordenes = await Orden.find(
+      { 'articulos.menuItemId': menuItemId },
+      { _id: 1 }
+    )
+    const ordenIds = ordenes.map(o => o._id)
+
+    // 2) Busca las reseñas cuya ordenId esté en la lista,
+    //    ordena por calificación descendente, luego fecha descendente,
+    //    y limita a 5 documentos.
+    const reviews = await Resena.find({ ordenId: { $in: ordenIds } })
+      .populate('usuarioId', 'nombre apellido')
+      .sort({ calificacion: -1, fecha: -1 })
+      .limit(5)
+
+    return res.json(reviews)
+  } catch (err) {
+    next(err)
+  }
+}
