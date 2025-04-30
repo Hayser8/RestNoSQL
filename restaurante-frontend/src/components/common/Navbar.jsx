@@ -4,25 +4,18 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu as MenuIcon, ShoppingBag } from 'lucide-react'
+import { useCart } from '@/components/common/CartContext'
 
 export default function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [cartCount, setCartCount] = useState(0)
+
+  // Obtenemos la lista de ítems del carrito
+  const { items: cartItems } = useCart()
+  const cartCount = cartItems.length
 
   useEffect(() => {
     setIsAuthenticated(!!localStorage.getItem('userSession'))
-
-    // Suponiendo que guardas tu carrito en localStorage como un array JSON
-    const stored = localStorage.getItem('cart')
-    if (stored) {
-      try {
-        const arr = JSON.parse(stored)
-        setCartCount(Array.isArray(arr) ? arr.length : 0)
-      } catch {
-        setCartCount(0)
-      }
-    }
   }, [])
 
   return (
@@ -80,7 +73,10 @@ export default function Navbar() {
           {/* Íconos y toggler móvil */}
           <div className="flex items-center space-x-4">
             {/* Carrito */}
-            <Link href="/cart" className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors">
+            <Link
+              href="/cart"
+              className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors"
+            >
               <ShoppingBag className="w-6 h-6" />
               {cartCount > 0 && (
                 <span className="absolute top-0 right-0 -mt-1 -mr-1 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
@@ -89,7 +85,7 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Mobile menu button */}
+            {/* Botón menú móvil */}
             <button
               onClick={() => setIsMenuOpen(open => !open)}
               className="md:hidden text-gray-700 hover:text-blue-600 focus:outline-none"
