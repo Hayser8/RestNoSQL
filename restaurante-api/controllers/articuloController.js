@@ -94,3 +94,17 @@ exports.deleteArticulo = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /api/articulos?categoria=...
+ * Listar artículos filtrados por categoría
+ */
+exports.getArticulosByCategory = async (req, res, next) => {
+  try {
+    const { categoria } = req.query
+    const articulos = await ArticuloMenu.find({ categoria })
+    res.json(articulos)
+  } catch (error) {
+    next(error)
+  }
+}
