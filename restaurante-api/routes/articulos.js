@@ -22,7 +22,12 @@ const validate = (checks) => [
  * @desc    Listar todos los artículos del menú
  * @access  Public
  */
-router.get('/', articuloController.getArticulos);
+router.get('/', (req, res, next) => {
+  if (req.query.categoria) {
+    return articuloController.getArticulosByCategory(req, res, next)
+  }
+  return articuloController.getArticulos(req, res, next)
+})
 
 /**
  * @route   GET /api/articulos/:id
