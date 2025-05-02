@@ -42,7 +42,7 @@ export default function RestaurantSelection({ formData, errors, restaurants, han
                   <span className="text-base font-medium text-blue-900">{restaurant.name}</span>
                   <div className="flex items-center text-sm text-gray-600">
                     <Clock className="w-4 h-4 mr-1" />
-                    <span>{restaurant.estimatedTime} min</span>
+                    <span>30 min</span>
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">{restaurant.address}</p>
