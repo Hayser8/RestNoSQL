@@ -32,7 +32,7 @@ export default function PopularDishesSection() {
             Platos más <span className="font-semibold">populares</span>
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Descubre los platos que nuestros clientes más aman y que han hecho de El Buen Sabor el restaurante favorito de la ciudad.
+            Descubre los platos que nuestros clientes más aman y que han hecho de Mamis Restaurant el restaurante favorito de la ciudad.
           </p>
         </div>
 
