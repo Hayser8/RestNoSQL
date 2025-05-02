@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
 export const metadata = {
-  title: "Carrito de Compra | El Buen Sabor",
-  description: "Revisa y finaliza tu pedido en El Buen Sabor",
+  title: "Carrito de Compra | Mamis Restaurant",
+  description: "Revisa y finaliza tu pedido en Mamis Restaurant",
 }
 
 export default function CartLayout({ children }) {
