@@ -31,7 +31,7 @@ export default function Navbar() {
                 className="w-10 h-10 rounded-full"
               />
               <span className="ml-2 text-xl font-bold text-blue-900">
-                Mami's Restaurant
+                Mamis Restaurant
               </span>
             </Link>
           </div>
