@@ -42,7 +42,7 @@ export default function CheckoutPage() {
         <div className="mb-8">
           <div className="flex items-center justify-center">
             <Link
-              href="/carrito"
+              href="/cart"
               className="text-blue-600 hover:text-blue-800 flex items-center absolute left-4 sm:left-8"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
