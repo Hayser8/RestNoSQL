@@ -4,7 +4,7 @@ import Footer from '@/components/common/Footer'
 import { CartProvider } from '@/components/common/CartContext'
 
 export const metadata = {
-  title: 'El Buen Sabor',
+  title: 'Mamis Restaurant',
   description: 'Entrega de comida tradicional a domicilio',
 }
 
