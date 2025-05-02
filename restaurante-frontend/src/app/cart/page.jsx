@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
   Minus,
@@ -15,10 +16,11 @@ import {
 } from 'lucide-react'
 import { useCart } from '@/components/common/CartContext'
 
-// Igual que en DishImage, un loader que retorna la URL tal cual
+// Loader que simplemente retorna la URL tal cual
 const externalLoader = ({ src }) => src
 
 export default function CartPage() {
+  const router = useRouter()
   const {
     items: cartItems,
     promoCode,
@@ -49,9 +51,9 @@ export default function CartPage() {
   }
 
   const formatPrice = (price) =>
-    new Intl.NumberFormat('en-EN', {
+    new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
     }).format(price)
 
   return (
@@ -189,10 +191,14 @@ export default function CartPage() {
                   <div className="text-xs text-gray-500 mt-1">Impuestos incluidos</div>
                 </div>
 
-                <button className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 flex items-center justify-center mt-6">
+                <button
+                  onClick={() => router.push('/checkout')}
+                  className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 flex items-center justify-center mt-6"
+                >
                   <CreditCard className="w-5 h-5 mr-2" />
                   Proceder al pago
                 </button>
+
                 <Link
                   href="/menu"
                   className="w-full block text-center bg-white text-blue-600 border border-blue-600 py-3 rounded-md hover:bg-blue-50 mt-2"
