@@ -1,7 +1,5 @@
-// controllers/resenaController.js
-
 const Resena = require('../models/Resena');
-const Orden = require('../models/Orden') 
+const Orden = require('../models/Orden');
 
 /**
  * POST /api/resenas
@@ -12,18 +10,18 @@ exports.createResena = async (req, res, next) => {
     const {
       restauranteId,
       ordenId,
-      calificacion
+      menuItemId,       // ahora lo recogemos
+      calificacion,
+      comentario
     } = req.body;
-
-    // Protegemos comentario de ser undefined
-    const comentario = req.body.comentario ? req.body.comentario.trim() : '';
 
     const newResena = await Resena.create({
       usuarioId: req.user.id,
       restauranteId,
       ordenId,
+      menuItemId: menuItemId || null,
       calificacion,
-      comentario
+      comentario: comentario.trim()
     });
 
     res.status(201).json(newResena);
@@ -33,7 +31,7 @@ exports.createResena = async (req, res, next) => {
 };
 
 /**
- * GET /api/resenas
+ * GET /api/resenas/all
  * Listar todas las reseñas (admin)
  */
 exports.getResenas = async (req, res, next) => {
@@ -41,7 +39,8 @@ exports.getResenas = async (req, res, next) => {
     const resenas = await Resena.find()
       .populate('usuarioId', 'nombre apellido')
       .populate('restauranteId', 'nombre')
-      .populate('ordenId', 'fecha');    // opcionalmente incluimos info de la orden
+      .populate('ordenId', 'fecha')
+      .populate('menuItemId', 'nombre precio'); // opcionalmente mostrar info de plato
     res.json(resenas);
   } catch (error) {
     next(error);
@@ -57,7 +56,8 @@ exports.getResenaById = async (req, res, next) => {
     const resena = await Resena.findById(req.params.id)
       .populate('usuarioId', 'nombre apellido')
       .populate('restauranteId', 'nombre')
-      .populate('ordenId', 'fecha');
+      .populate('ordenId', 'fecha')
+      .populate('menuItemId', 'nombre precio');
     if (!resena) {
       return res.status(404).json({ message: 'Reseña no encontrada' });
     }
@@ -109,29 +109,47 @@ exports.deleteResena = async (req, res, next) => {
 
 /**
  * GET /api/resenas/product/:menuItemId
- * Listar las 5 mejores reseñas asociadas a un artículo del menú
+ * Listar las 5 mejores reseñas de un plato/bebida concreto
  */
 exports.getResenasByProducto = async (req, res, next) => {
   try {
-    const { menuItemId } = req.params
+    const { menuItemId } = req.params;
 
-    // 1) Obtén solo los _id de las órdenes que incluyan ese menuItemId
+    // 1) obtén los _id de las órdenes que incluyan ese menuItemId
     const ordenes = await Orden.find(
       { 'articulos.menuItemId': menuItemId },
       { _id: 1 }
-    )
-    const ordenIds = ordenes.map(o => o._id)
+    );
+    const ordenIds = ordenes.map(o => o._id);
 
-    // 2) Busca las reseñas cuya ordenId esté en la lista,
-    //    ordena por calificación descendente, luego fecha descendente,
-    //    y limita a 5 documentos.
-    const reviews = await Resena.find({ ordenId: { $in: ordenIds } })
-      .populate('usuarioId', 'nombre apellido')
-      .sort({ calificacion: -1, fecha: -1 })
-      .limit(5)
+    // 2) busca reseñas de esas órdenes **y** que tengan menuItemId igual
+    const reviews = await Resena.find({
+      ordenId:      { $in: ordenIds },
+      menuItemId:   menuItemId
+    })
+    .populate('usuarioId', 'nombre apellido avatar')
+    .sort({ calificacion: -1, fecha: -1 })
+    .limit(5);
 
-    return res.json(reviews)
+    res.json(reviews);
   } catch (err) {
-    next(err)
+    next(err);
+  }
+};
+
+/**
+ * GET /api/resenas/me
+ * Obtener reseñas del usuario autenticado
+ */
+exports.getResenasByUser = async (req, res, next) => {
+  try {
+    const resenas = await Resena.find({ usuarioId: req.user.id })
+      .populate('restauranteId', 'nombre')
+      .populate('ordenId', 'fecha')
+      .populate('menuItemId', 'nombre precio')
+
+    res.json(resenas)
+  } catch (error) {
+    next(error)
   }
 }
