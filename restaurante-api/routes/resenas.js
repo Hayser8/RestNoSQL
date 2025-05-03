@@ -1,108 +1,103 @@
-// routes/resenas.js
-const express = require('express')
-const { body, param, query, validationResult } = require('express-validator')
-const resenaController = require('../controllers/resenaController')
-const { protect, restrictTo } = require('../middlewares/auth')
+const express = require('express');
+const { body, param, validationResult } = require('express-validator');
+const resenaController = require('../controllers/resenaController');
+const { protect, restrictTo } = require('../middlewares/auth');
 
-const router = express.Router()
+const router = express.Router();
 
-// Middleware para validar inputs
-const validate = (checks) => [
-  checks,
-  (req, res, next) => {
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() })
-    }
-    next()
-  }
-]
+// 1) GET /api/resenas/me — Obtener reseñas del usuario autenticado
+router.get(
+  '/me',
+  protect,
+  resenaController.getResenasByUser
+);
 
-/**
- * @route   GET /api/resenas/product/:menuItemId
- * @desc    Listar reseñas de un producto específico
- * @access  Public
- */
+// 2) GET /api/resenas/product/:menuItemId — Listar reseñas de un producto específico
 router.get(
   '/product/:menuItemId',
-  validate(param('menuItemId').isMongoId().withMessage('menuItemId inválido')),
+  param('menuItemId').isMongoId().withMessage('menuItemId inválido'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    next();
+  },
   resenaController.getResenasByProducto
-)
+);
 
-/**
- * @route   POST /api/resenas
- * @desc    Crear una nueva reseña (usuario autenticado)
- * @access  Private (user)
- */
+// 3) POST /api/resenas — Crear nueva reseña (usuario autenticado)
 router.post(
   '/',
   protect,
-  validate(body('restauranteId').isMongoId().withMessage('restauranteId inválido')),
-  validate(body('ordenId').optional().isMongoId().withMessage('ordenId inválido')),
-  validate(body('calificacion')
+  body('restauranteId').isMongoId().withMessage('restauranteId inválido'),
+  body('ordenId').isMongoId().withMessage('ordenId inválido'),
+  body('menuItemId').optional().isMongoId().withMessage('menuItemId inválido'),
+  body('calificacion')
     .isInt({ min: 1, max: 5 })
-    .withMessage('La calificación debe ser un número entre 1 y 5')),
-  validate(body('comentario')
-    .notEmpty().withMessage('El comentario es obligatorio')),
+    .withMessage('La calificación debe ser un número entre 1 y 5'),
+  body('comentario').notEmpty().withMessage('El comentario es obligatorio'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    next();
+  },
   resenaController.createResena
-)
+);
 
-/**
- * @route   GET /api/resenas/all
- * @desc    Listar todas las reseñas (admin)
- * @access  Private (admin)
- */
+// 4) GET /api/resenas/all — Listar todas las reseñas (admin)
 router.get(
   '/all',
   protect,
   restrictTo('admin'),
   resenaController.getResenas
-)
+);
 
-/**
- * @route   GET /api/resenas/:id
- * @desc    Obtener una reseña por ID (admin)
- * @access  Private (admin)
- */
+// 5) GET /api/resenas/:id — Obtener reseña por ID (admin)
 router.get(
   '/:id',
   protect,
   restrictTo('admin'),
-  validate(param('id').isMongoId().withMessage('ID de reseña inválido')),
+  param('id').isMongoId().withMessage('ID de reseña inválido'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    next();
+  },
   resenaController.getResenaById
-)
+);
 
-/**
- * @route   PUT /api/resenas/:id
- * @desc    Actualizar una reseña por ID (admin)
- * @access  Private (admin)
- */
+// 6) PUT /api/resenas/:id — Actualizar reseña por ID (admin)
 router.put(
   '/:id',
   protect,
   restrictTo('admin'),
-  validate(param('id').isMongoId().withMessage('ID de reseña inválido')),
-  validate(body('calificacion')
+  param('id').isMongoId().withMessage('ID de reseña inválido'),
+  body('calificacion')
     .optional()
     .isInt({ min: 1, max: 5 })
-    .withMessage('La calificación debe ser un número entre 1 y 5')),
-  validate(body('comentario')
+    .withMessage('La calificación debe ser un número entre 1 y 5'),
+  body('comentario')
     .optional()
-    .notEmpty().withMessage('El comentario no puede estar vacío')),
+    .notEmpty().withMessage('El comentario no puede estar vacío'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    next();
+  },
   resenaController.updateResena
-)
+);
 
-/**
- * @route   DELETE /api/resenas/:id
- * @desc    Eliminar una reseña por ID (admin)
- * @access  Private (admin)
- */
+// 7) DELETE /api/resenas/:id — Eliminar reseña por ID (admin)
 router.delete(
   '/:id',
   protect,
   restrictTo('admin'),
-  validate(param('id').isMongoId().withMessage('ID de reseña inválido')),
+  param('id').isMongoId().withMessage('ID de reseña inválido'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    next();
+  },
   resenaController.deleteResena
-)
+);
 
-module.exports = router
+module.exports = router;
