@@ -1,7 +1,28 @@
+// src/components/checkout/OrderConfirmation.jsx
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from "next/link"
 import { CheckCircle2, Store, MapPin, Clock, CreditCard } from "lucide-react"
 
 export default function OrderConfirmation({ formData, restaurants }) {
+  const [location, setLocation] = useState(null)
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          setLocation({ lat: coords.latitude, lng: coords.longitude })
+        },
+        (err) => {
+          console.error("Error al obtener ubicación:", err)
+        }
+      )
+    }
+  }, [])
+
+  const restaurante = restaurants.find(r => r.id === formData.selectedRestaurant)
+
   return (
     <div className="p-6 text-center">
       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -15,35 +36,45 @@ export default function OrderConfirmation({ formData, restaurants }) {
         <h3 className="text-lg font-medium text-blue-900 mb-2">Detalles del pedido</h3>
 
         <div className="space-y-2">
+          {/* Nombre del restaurante */}
           <div className="flex items-center">
             <Store className="w-5 h-5 text-blue-600 mr-2" />
             <p className="text-gray-700">
               Restaurante:{" "}
-              <span className="font-medium">{restaurants.find((r) => r.id === formData.selectedRestaurant)?.name}</span>
+              <span className="font-medium">{restaurante?.name}</span>
             </p>
           </div>
 
+          {/* Ubicación del usuario (coordenadas) */}
           <div className="flex items-center">
             <MapPin className="w-5 h-5 text-blue-600 mr-2" />
             <p className="text-gray-700">
-              Dirección de entrega: <span className="font-medium">Calle del Usuario 42, Madrid</span>
-            </p>
-          </div>
-
-          <div className="flex items-center">
-            <Clock className="w-5 h-5 text-blue-600 mr-2" />
-            <p className="text-gray-700">
-              Tiempo estimado:{" "}
+              Dirección de entrega:{" "}
               <span className="font-medium">
-                {restaurants.find((r) => r.id === formData.selectedRestaurant)?.estimatedTime} minutos
+                {location
+                  ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
+                  : "Obteniendo ubicación..."}
               </span>
             </p>
           </div>
 
+          {/* Tiempo estimado fijo */}
+          <div className="flex items-center">
+            <Clock className="w-5 h-5 text-blue-600 mr-2" />
+            <p className="text-gray-700">
+              Tiempo estimado:{" "}
+              <span className="font-medium">30 minutos</span>
+            </p>
+          </div>
+
+          {/* Método de pago */}
           <div className="flex items-center">
             <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
             <p className="text-gray-700">
-              Método de pago: <span className="font-medium">Tarjeta terminada en {formData.cardNumber.slice(-4)}</span>
+              Método de pago:{" "}
+              <span className="font-medium">
+                Tarjeta terminada en {formData.cardNumber.slice(-4)}
+              </span>
             </p>
           </div>
         </div>
@@ -65,5 +96,5 @@ export default function OrderConfirmation({ formData, restaurants }) {
         </Link>
       </div>
     </div>
-  )
+)
 }
