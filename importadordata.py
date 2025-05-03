@@ -25,12 +25,21 @@ calles    = ["Av. Principal", "Calle Secundaria", "Paseo de la Reforma", "Camino
 ciudades  = ["Madrid", "Barcelona", "Valencia", "Sevilla", "Bilbao"]
 nombres   = ["María", "Juan", "Ana", "Luis", "Carmen", "Carlos", "Lucía", "Miguel"]
 apellidos = ["García", "Rodríguez", "Martínez", "López", "Sánchez", "Pérez"]
-comentarios = [
-    "Los tacos al pastor estuvieron increíbles!",
-    "Muy buena variedad de tacos y salsas.",
-    "Los tacos llegaron un poco fríos, pero estaban sabrosos.",
-    "Me encantaron los tacos de carnitas, repetiré seguro.",
-    "Buena atención, aunque los tacos tardaron algo en llegar."
+
+# Plantillas de comentarios
+plantillas_platillo = [
+    "{} estuvieron increíbles!",
+    "Los {} me encantaron, repetiré seguro.",
+    "La porción de {} estuvo perfecta y deliciosa.",
+    "{} llegaron un poco fríos, pero el sabor lo compensa.",
+    "Muy buena presentación de los {}."
+]
+plantillas_pedido = [
+    "El pedido completo fue perfecto, ¡gracias!",
+    "Muy buena experiencia con todo el pedido.",
+    "Tardó un poco, pero todo llegó excelente.",
+    "La atención y el pedido en general estuvieron de 10.",
+    "Repetiré mi pedido completo sin duda."
 ]
 
 # —————————————————————————————————————————
@@ -140,40 +149,41 @@ for _ in range(N_ORDENES):
     })
 res = db.ordenes.insert_many(ordenes_docs)
 order_ids = res.inserted_ids
+order_map = list(zip(order_ids, ordenes_docs))
 print(f"{len(order_ids)} órdenes insertadas.")
 
 # —————————————————————————————————————————
 # 5) GENERAR Y INSERTAR RESEÑAS
-# Definir pesos para calificaciones alrededor de 4
 ratings = [1, 2, 3, 4, 5]
-weights = [5, 10, 20, 40, 25]  # promedio ~3.9
+weights = [5, 10, 20, 40, 25]  # promedio ≈3.9
 
 resenas = []
 for _ in range(N_RESENAS):
     usr = random.choice(user_ids)
-    # 80% referencian una orden; si es así, usan la misma restaurantId
-    if random.random() < 0.8:
-        ord_id = random.choice(order_ids)
-        ord_doc = next((o for o in ordenes_docs if o.get('_id') == ord_id), None)
-        rst = ord_doc["restauranteId"] if ord_doc else random.choice(resto_ids)
-        doc = {
-            "usuarioId": usr,
-            "restauranteId": rst,
-            "ordenId": ord_id,
-            "calificacion": random.choices(ratings, weights)[0],
-            "comentario": random.choice(comentarios),
-            "fecha": datetime.datetime.now(timezone.utc)
-        }
+    ord_id, ord_doc = random.choice(order_map)
+    rst = ord_doc["restauranteId"]
+
+    # decidir si es reseña de plato (20%) o del pedido completo (80%)
+    if random.random() < 0.2:
+        art = random.choice(ord_doc["articulos"])
+        menu_item_id = art["menuItemId"]
+        # comentario dinámico para el platillo
+        plantilla = random.choice(plantillas_platillo)
+        comentario = plantilla.format(art["nombre"])
     else:
-        rst = random.choice(resto_ids)
-        doc = {
-            "usuarioId": usr,
-            "restauranteId": rst,
-            "calificacion": random.choices(ratings, weights)[0],
-            "comentario": random.choice(comentarios),
-            "fecha": datetime.datetime.now(timezone.utc)
-        }
-    resenas.append(doc)
+        menu_item_id = None
+        # comentario genérico para el pedido
+        comentario = random.choice(plantillas_pedido)
+
+    resenas.append({
+        "usuarioId": usr,
+        "restauranteId": rst,
+        "ordenId": ord_id,
+        "menuItemId": menu_item_id,
+        "calificacion": random.choices(ratings, weights)[0],
+        "comentario": comentario,
+        "fecha": datetime.datetime.now(timezone.utc)
+    })
 
 res = db.resenas.insert_many(resenas)
 print(f"{len(res.inserted_ids)} reseñas insertadas.")
