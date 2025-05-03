@@ -36,23 +36,31 @@ exports.register = async (req, res, next) => {
  */
 exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const usuario = await Usuario.findOne({ email: email.trim() });
-    if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
+    const { email, password } = req.body
+    const usuario = await Usuario.findOne({ email: email.trim() })
+    if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' })
 
-    const isMatch = await bcrypt.compare(password, usuario.password);
-    if (!isMatch) return res.status(401).json({ message: 'Credenciales inválidas' });
+    let isMatch = false
+    if (usuario.password.startsWith('$2')) {
+      // es un hash bcrypt
+      isMatch = await bcrypt.compare(password, usuario.password)
+    } else {
+      // contraseña en texto plano (sólo para seed/dev)
+      isMatch = password === usuario.password
+    }
+
+    if (!isMatch) return res.status(401).json({ message: 'Credenciales inválidas' })
 
     const token = jwt.sign(
       { id: usuario._id, rol: usuario.rol },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
-    );
-    res.json({ token });
+    )
+    res.json({ token })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 /**
  * POST /api/usuarios/forgot-password
