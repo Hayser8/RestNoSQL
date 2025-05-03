@@ -11,9 +11,17 @@ const ResenaSchema = new mongoose.Schema({
     required: true,
     ref: 'Restaurante'
   },
+  // ahora ordenId es obligatorio
   ordenId: {
     type: mongoose.Schema.Types.ObjectId,
+    required: true,
     ref: 'Orden'
+  },
+  // menuItemId opcional para reseñas de plato
+  menuItemId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ArticuloMenu',
+    default: null
   },
   calificacion: {
     type: Number,
@@ -23,7 +31,8 @@ const ResenaSchema = new mongoose.Schema({
   },
   comentario: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   fecha: {
     type: Date,
