@@ -40,8 +40,9 @@ const OrdenSchema = new mongoose.Schema({
   },
   estado: {
     type: String,
+    enum: ['pendiente', 'confirmado', 'en preparación', 'entregado', 'cancelado'],
     required: true,
-    enum: ['confirmado', 'en preparación', 'entregado', 'cancelado']
+    default: 'pendiente'
   },
   total: {
     type: Number,
