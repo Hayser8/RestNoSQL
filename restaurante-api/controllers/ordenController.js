@@ -4,32 +4,46 @@ const Orden = require('../models/Orden');
 
 /**
  * Crear nueva orden
- * usuario: req.user.id
- * total: suma de articulos
- * estado: 'confirmado' por default
+ * usuarioId: viene de req.user.id
+ * fecha: viene en body o ahora()
+ * estado: viene en body o 'confirmado'
+ * total: opcional en body, si no se recalcula
  */
 exports.createOrden = async (req, res, next) => {
   try {
-    const { restauranteId, articulos = [] } = req.body;  // <-- default []
+    const {
+      restauranteId,
+      articulos = [],
+      fecha,      // extraemos fecha
+      estado,     // extraemos estado
+      total: totalBody
+    } = req.body
 
-    // Calcular total sin error cuando articulos es undefined
-    const total = articulos.reduce((sum, item) => sum + item.cantidad * item.precio, 0);
+    // validación extra por si acaso
+    if (!Array.isArray(articulos) || articulos.length === 0) {
+      return res.status(400).json({ message: 'Debe incluir al menos un artículo' })
+    }
+
+    // Calcular total si no vino en el payload
+    const total = typeof totalBody === 'number'
+      ? totalBody
+      : articulos.reduce((sum, item) => sum + item.cantidad * item.precio, 0)
 
     const nuevaOrden = new Orden({
-      usuarioId: req.user.id,
+      usuarioId:     req.user.id,
       restauranteId,
       articulos,
       total,
-      estado: 'confirmado'
-    });
+      estado:        estado || 'confirmado',
+      fecha:         fecha ? new Date(fecha) : new Date()
+    })
 
-    const ordenGuardada = await nuevaOrden.save();
-    res.status(201).json(ordenGuardada);
+    const ordenGuardada = await nuevaOrden.save()
+    res.status(201).json(ordenGuardada)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
-
+}
 /**
  * Historial de pedidos del usuario autenticado
  */
