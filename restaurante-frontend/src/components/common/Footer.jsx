@@ -15,7 +15,7 @@ export default function Footer() {
               <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
                 BS
               </div>
-              <span className="ml-2 text-xl font-medium text-white">El Buen Sabor</span>
+              <span className="ml-2 text-xl font-medium text-white">Mamis restaurant</span>
             </div>
             <p className="text-gray-400 mb-6">
               Llevando los mejores sabores a tu hogar desde 2010. Nuestra misión es deleitar tu paladar con platos auténticos y de calidad.
@@ -62,7 +62,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center text-gray-400">
                 <Mail className="w-5 h-5 mr-3 text-blue-500" />
-                <span>info@elbuensabor.com</span>
+                <span>info@mamisrestaurant.com</span>
               </li>
               <li className="flex items-start text-gray-400">
                 <MapPin className="w-5 h-5 mr-3 text-blue-500 mt-1" />
@@ -94,7 +94,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm mb-4 md:mb-0">
-              &copy; {new Date().getFullYear()} El Buen Sabor. Todos los derechos reservados.
+              &copy; {new Date().getFullYear()} Mamis restaurant. Todos los derechos reservados.
             </p>
             <div className="flex space-x-6">
               <Link href="/terms" className="text-gray-500 text-sm hover:text-white transition-colors">Términos y condiciones</Link>
