@@ -1,123 +1,120 @@
-'use client'
+// frontend/src/components/perfil/UserInfo.jsx
+"use client"
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Save } from 'lucide-react'
-import InputField from '@/components/common/InputField'
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Save } from "lucide-react"
 
-export default function UserInfo({ onUserUpdate }) {
+export default function UserInfo({ onUserUpdate = () => {} }) {
   const router = useRouter()
 
   const [formData, setFormData] = useState({
-    nombre: '',
-    apellido: '',
-    email: '',
-    telefono: '',
-    direccion: '',
-    nit: '',
-    fechaRegistro: ''
+    nombre: "",
+    apellido: "",
+    email: "",
+    telefono: "",
+    direccion: "",
+    nit: "",
+    fechaRegistro: "",
   })
   const [isEditing, setIsEditing] = useState(false)
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
-  const [loadError, setLoadError] = useState('')
+  const [loadError, setLoadError] = useState("")
 
-  // 1) Al montar, cargar perfil
+  // 1) Carga inicial: sólo al montarse
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem("token")
     if (!token) {
-      router.push('/login')
+      router.push("/login")
       return
     }
-    fetch('/api/usuarios/me', {
-      headers: { Authorization: `Bearer ${token}` }
+    fetch("/api/usuarios/me", {
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => {
-        console.log('GET /api/usuarios/me →', res.status, res.statusText)
+      .then((res) => {
         if (res.status === 401) {
-          // token inválido o expirado
-          router.push('/login')
-          return Promise.reject('Unauthorized')
+          router.push("/login")
+          return Promise.reject("Unauthorized")
         }
         if (!res.ok) {
           setLoadError(`Error al cargar perfil (${res.status})`)
-          return Promise.reject('FetchError')
+          return Promise.reject("FetchError")
         }
         return res.json()
       })
-      .then(data => {
+      .then((data) => {
         setFormData({
-          nombre: data.nombre,
-          apellido: data.apellido,
-          email: data.email,
-          telefono: data.telefono || '',
-          direccion: data.direccion || '',
-          nit: data.nit || '',
-          fechaRegistro: new Date(data.fechaRegistro).toLocaleDateString('es-ES', {
-            year: 'numeric', month: 'long', day: 'numeric'
-          })
+          nombre: data.nombre || "",
+          apellido: data.apellido || "",
+          email: data.email || "",
+          telefono: data.telefono || "",
+          direccion: data.direccion || "",
+          nit: data.nit || "",
+          fechaRegistro: new Date(data.fechaRegistro).toLocaleDateString("es-ES", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
         })
         onUserUpdate(data)
       })
-      .catch(err => {
-        if (typeof err !== 'string') console.error('Error inesperado al cargar perfil', err)
+      .catch((err) => {
+        if (typeof err !== "string") console.error("Error inesperado al cargar perfil", err)
       })
-  }, [router, onUserUpdate])
+  }, [])  // ← aquí
 
-  // 2) Cambiar campos
-  const handleChange = e => {
+  // 2) Manejo de cambios
+  const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(f => ({ ...f, [name]: value }))
-    setErrors(errs => ({ ...errs, [name]: '' }))
+    setFormData((f) => ({ ...f, [name]: value }))
+    setErrors((e) => ({ ...e, [name]: "" }))
   }
 
-  // 3) Validar antes de enviar
+  // 3) Validación
   const validateForm = () => {
     const errs = {}
-    if (!formData.nombre) errs.nombre = 'El nombre es obligatorio'
-    if (!formData.apellido) errs.apellido = 'El apellido es obligatorio'
-    if (!formData.email) errs.email = 'El correo es obligatorio'
-    else if (!/^.+@.+$/.test(formData.email)) errs.email = 'Correo inválido'
+    if (!formData.nombre) errs.nombre = "El nombre es obligatorio"
+    if (!formData.apellido) errs.apellido = "El apellido es obligatorio"
+    if (!formData.email) errs.email = "El correo es obligatorio"
+    else if (!/^.+@.+$/.test(formData.email)) errs.email = "Correo inválido"
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
-  // 4) Enviar actualización
-  const handleSubmit = async e => {
+  // 4) Envío
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validateForm()) return
 
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/usuarios/me', {
-        method: 'PUT',
+      const token = localStorage.getItem("token")
+      const res = await fetch("/api/usuarios/me", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           nombre: formData.nombre,
           apellido: formData.apellido,
           email: formData.email,
           telefono: formData.telefono,
-          direccion: formData.direccion
-        })
+          direccion: formData.direccion,
+        }),
       })
-      console.log('PUT /api/usuarios/me →', res.status, res.statusText)
       if (res.status === 401) {
-        router.push('/login')
+        router.push("/login")
         return
       }
-      if (!res.ok) {
-        throw new Error(`Error ${res.status}`)
-      }
+      if (!res.ok) throw new Error(`Error ${res.status}`)
       const updated = await res.json()
-      setIsEditing(false)
       onUserUpdate(updated)
+      setIsEditing(false)
     } catch (err) {
-      console.error('Error actualizando perfil', err)
-      setErrors({ form: 'No se pudo actualizar. Inténtalo de nuevo.' })
+      console.error("Error actualizando perfil", err)
+      setErrors({ form: "No se pudo actualizar. Inténtalo de nuevo." })
     } finally {
       setIsLoading(false)
     }
@@ -150,49 +147,74 @@ export default function UserInfo({ onUserUpdate }) {
       {isEditing ? (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid md:grid-cols-2 gap-5">
-            <InputField
-              label="Nombre"
-              name="nombre"
-              value={formData.nombre}
+            {/* Nombre */}
+            <div>
+              <label className="block text-sm text-gray-800 mb-1">Nombre</label>
+              <input
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                disabled={isLoading}
+                className="w-full px-3 py-2 border rounded text-gray-600 focus:outline-none focus:ring"
+                required
+              />
+              {errors.nombre && <p className="mt-1 text-xs text-red-600">{errors.nombre}</p>}
+            </div>
+
+            {/* Apellido */}
+            <div>
+              <label className="block text-sm text-gray-800 mb-1">Apellido</label>
+              <input
+                name="apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                disabled={isLoading}
+                className="w-full px-3 py-2 border rounded text-gray-600 focus:outline-none focus:ring"
+                required
+              />
+              {errors.apellido && <p className="mt-1 text-xs text-red-600">{errors.apellido}</p>}
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm text-gray-800 mb-1">Correo electrónico</label>
+            <input
+              name="email"
+              type="email"
+              value={formData.email}
               onChange={handleChange}
-              error={errors.nombre}
               disabled={isLoading}
+              className="w-full px-3 py-2 border rounded text-gray-600 focus:outline-none focus:ring"
               required
             />
-            <InputField
-              label="Apellido"
-              name="apellido"
-              value={formData.apellido}
+            {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+          </div>
+
+          {/* Teléfono */}
+          <div>
+            <label className="block text-sm text-gray-800 mb-1">Teléfono</label>
+            <input
+              name="telefono"
+              value={formData.telefono}
               onChange={handleChange}
-              error={errors.apellido}
               disabled={isLoading}
-              required
+              className="w-full px-3 py-2 border rounded text-gray-600 focus:outline-none focus:ring"
             />
           </div>
-          <InputField
-            label="Correo electrónico"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            disabled={isLoading}
-            required
-          />
-          <InputField
-            label="Teléfono"
-            name="telefono"
-            value={formData.telefono}
-            onChange={handleChange}
-            disabled={isLoading}
-          />
-          <InputField
-            label="Dirección"
-            name="direccion"
-            value={formData.direccion}
-            onChange={handleChange}
-            disabled={isLoading}
-          />
+
+          {/* Dirección */}
+          <div>
+            <label className="block text-sm text-gray-800 mb-1">Dirección</label>
+            <input
+              name="direccion"
+              value={formData.direccion}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="w-full px-3 py-2 border rounded text-gray-600 focus:outline-none focus:ring"
+            />
+          </div>
+
           <div className="flex gap-3">
             <button
               type="button"
@@ -218,6 +240,7 @@ export default function UserInfo({ onUserUpdate }) {
         </form>
       ) : (
         <div className="space-y-6">
+          {/* Vista de sólo lectura */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm text-gray-800">Nombre</h3>
@@ -234,11 +257,15 @@ export default function UserInfo({ onUserUpdate }) {
           </div>
           <div>
             <h3 className="text-sm text-gray-800">Teléfono</h3>
-            <p className="text-gray-600 mt-1 text-lg">{formData.telefono || 'No especificado'}</p>
+            <p className="text-gray-600 mt-1 text-lg">
+              {formData.telefono || "No especificado"}
+            </p>
           </div>
           <div>
             <h3 className="text-sm text-gray-800">Dirección</h3>
-            <p className="text-gray-600 mt-1 text-lg">{formData.direccion || 'No especificada'}</p>
+            <p className="text-gray-600 mt-1 text-lg">
+              {formData.direccion || "No especificada"}
+            </p>
           </div>
           <div>
             <h3 className="text-sm text-gray-800">NIT</h3>
