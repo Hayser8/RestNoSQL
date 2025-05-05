@@ -1,10 +1,13 @@
 // routes/stats.js
-const express = require('express');
-const { getStats } = require('../controllers/statsController');
+const express         = require('express')
+const { getStats, range } = require('../controllers/statsController')
 
-const router = express.Router();
+const router = express.Router()
 
-// GET /api/stats — devuelve { avgRating, totalUsers, totalDishes }
-router.get('/', getStats);
+// Landing → GET /api/stats
+router.get('/', getStats)
 
-module.exports = router;
+// Dashboard → GET /api/stats/range?range=day|week|month|year
+router.get('/range', range)
+
+module.exports = router
