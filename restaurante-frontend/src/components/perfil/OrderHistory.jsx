@@ -29,6 +29,8 @@ export default function OrderHistory() {
         })
         if (!res.ok) throw new Error("Error al obtener pedidos")
         const data = await res.json()
+        console.log("ORDENES →", data)
+  
         setOrders(
           data.map((orden) => ({
             id: orden._id,
@@ -38,15 +40,16 @@ export default function OrderHistory() {
               nombre: orden.restauranteId.nombre,
               direccion: orden.restauranteId.direccion,
             },
-            estado: orden.estado,
+            estado: orden.estado.toLowerCase(),
             total: orden.total,
-            articulos: orden.articulos.map((a, i) => ({
-              id: a._id || `art-${i}`,
-              nombre: a.menuItemId?.nombre || "Item eliminado",
+            articulos: orden.articulos.map((a) => ({
+              // a.menuItemId viene como un string/ObjectId, no como objeto poblado
+              id: String(a.menuItemId),
+              nombre: a.menuItemId?.nombre ?? "Nombre no disponible",
               cantidad: a.cantidad,
               precio: a.precio,
             })),
-            hasReview: false, // luego ajustamos esto al crearla
+            hasReview: false,
           }))
         )
       } catch (err) {
@@ -55,12 +58,13 @@ export default function OrderHistory() {
         setLoading(false)
       }
     }
+  
     fetchOrders()
   }, [])
+  
 
-  const toggleOrderDetails = (orderId) => {
+  const toggleOrderDetails = (orderId) =>
     setExpandedOrder((prev) => (prev === orderId ? null : orderId))
-  }
 
   const openReviewModal = (order) => {
     setSelectedOrder(order)
@@ -72,15 +76,12 @@ export default function OrderHistory() {
     setSelectedOrder(null)
   }
 
-  // Cuando el modal confirme la creación, marcamos el pedido como reseñado:
+  // Marca el pedido como reseñado
   const handleReviewCreated = (orderId) => {
     setOrders((prev) =>
       prev.map((o) =>
         o.id === orderId
-          ? {
-              ...o,
-              hasReview: true,
-            }
+          ? { ...o, hasReview: true }
           : o
       )
     )
@@ -119,7 +120,7 @@ export default function OrderHistory() {
       </h2>
 
       {loading ? (
-        <p className="text-center text-gray-500">Cargando pedidos...</p>
+        <p className="text-center text-gray-500">Cargando pedidos…</p>
       ) : error ? (
         <p className="text-center text-red-500">Error: {error}</p>
       ) : orders.length === 0 ? (
@@ -168,31 +169,27 @@ export default function OrderHistory() {
                         ${order.total.toFixed(2)}
                       </div>
                     </div>
-                    <div>
-                      {expandedOrder === order.id ? (
-                        <ChevronUp className="w-5 h-5 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-500" />
-                      )}
-                    </div>
+                    {expandedOrder === order.id ? (
+                      <ChevronUp className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-500" />
+                    )}
                   </div>
                 </div>
               </div>
 
               {expandedOrder === order.id && (
                 <div className="border-t border-gray-200 p-4 bg-gray-50">
-                  {/* Detalles de ubicación */}
-                  <div className="mb-4">
-                    <div className="flex items-start">
-                      <MapPin className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {order.restaurante.nombre}
-                        </div>
-                        <div className="text-gray-500">
-                          {order.restaurante.direccion}
-                        </div>
-                      </div>
+                  {/* Ubicación */}
+                  <div className="mb-4 flex items-start">
+                    <MapPin className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {order.restaurante.nombre}
+                      </p>
+                      <p className="text-gray-500">
+                        {order.restaurante.direccion}
+                      </p>
                     </div>
                   </div>
 
@@ -201,29 +198,23 @@ export default function OrderHistory() {
                     <h4 className="font-medium text-gray-900 mb-2">Artículos</h4>
                     <ul className="divide-y divide-gray-200">
                       {order.articulos.map((item) => (
-                        <li key={item.id} className="py-2">
-                          <div className="text-gray-800 flex justify-between">
-                            <div>
-                              <span className="text-gray-800 font-medium">
-                                {item.cantidad}x
-                              </span>{" "}
-                              {item.nombre}
-                            </div>
-                            <div className="text-gray-800 font-medium">
-                              ${(item.precio * item.cantidad).toFixed(2)}
-                            </div>
-                          </div>
+                        <li key={item.id} className="py-2 flex justify-between text-gray-800">
+                          <span>
+                            <span className="font-medium">{item.cantidad}×</span>{" "}
+                            {item.nombre}
+                          </span>
+                          <span className="font-medium">
+                            ${(item.precio * item.cantidad).toFixed(2)}
+                          </span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
                   {/* Total final */}
-                  <div className="border-t border-gray-300 pt-4 mt-4">
-                    <div className="flex justify-between font-medium text-gray-800">
-                      <div>Total</div>
-                      <div>${order.total.toFixed(2)}</div>
-                    </div>
+                  <div className="border-t border-gray-300 pt-4 mt-4 flex justify-between font-medium text-gray-800">
+                    <span>Total</span>
+                    <span>${order.total.toFixed(2)}</span>
                   </div>
 
                   {/* Botón de dejar reseña */}
@@ -240,11 +231,9 @@ export default function OrderHistory() {
                   )}
 
                   {order.hasReview && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="text-sm text-gray-500 italic">
-                        Ya has dejado una reseña para este pedido.
-                      </div>
-                    </div>
+                    <p className="mt-4 pt-4 border-t border-gray-200 text-center text-sm text-gray-500 italic">
+                      Ya has dejado una reseña para este pedido.
+                    </p>
                   )}
                 </div>
               )}
