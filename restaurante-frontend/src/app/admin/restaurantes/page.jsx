@@ -128,7 +128,7 @@ if (!res.ok) {
           <Header title="Restaurantes" subtitle="Gestiona tus locales" />
 
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Lista de restaurantes</h2>
+          <h2 className="text-gray-800 text-xl font-semibold">Lista de restaurantes</h2>
             <Button variant="primary" className="flex items-center" onClick={handleAddNew}>
               <Plus size={18} className="mr-2" />
               Nuevo restaurante
