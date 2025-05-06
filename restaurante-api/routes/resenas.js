@@ -3,6 +3,7 @@ const { body, param, validationResult } = require('express-validator');
 const resenaController = require('../controllers/resenaController');
 const { protect, restrictTo } = require('../middlewares/auth');
 const { getReviewStats } = require('../controllers/reviewStatsController')
+const filterCtrl   = require('../controllers/resenaFilterController'); 
 
 const router = express.Router();
 
@@ -60,6 +61,12 @@ router.get(
   restrictTo('admin'),
   getReviewStats
 )
+
+/* NUEVO: filtrado */
+router.get('/filter',
+  protect, restrictTo('admin'),
+  filterCtrl.filterResenas
+);
 
 // 5) GET /api/resenas/:id — Obtener reseña por ID (admin)
 router.get(

@@ -4,7 +4,7 @@ import { Input } from "../restaurante/input"
 import { Select } from "../menu/select"
 import { Button } from "../menu/button"
 
-export function ResenaFilter({ searchTerm, setSearchTerm, filtros, setFiltros, restaurantes }) {
+export  default function ResenaFilter({ searchTerm, setSearchTerm, filtros, setFiltros, restaurantes }) {
   const handleFilterChange = (e) => {
     const { name, value } = e.target
     setFiltros((prev) => ({

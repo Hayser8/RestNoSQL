@@ -151,3 +151,16 @@ exports.updateMe = async (req, res, next) => {
     next(error);
   }
 };
+
+
+/**
+ * GET /api/usuarios
+ * Devuelve todos los usuarios (sólo admin)
+ */
+exports.getUsuarios = async (req, res, next) => {
+  try {
+    const usuarios = await Usuario.find()
+      .select('_id nombre apellido email rol fechaRegistro');   // ajusta los campos
+    res.json(usuarios);
+  } catch (err) { next(err); }
+};

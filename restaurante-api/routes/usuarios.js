@@ -3,7 +3,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const usuarioController = require('../controllers/usuarioController');
-const { protect } = require('../middlewares/auth');
+const { protect, restrictTo } = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -58,6 +58,15 @@ router.post(
   '/reset-password/:token',
   validate(body('password').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres')),
   usuarioController.resetPassword
+);
+
+
+/* NUEVO: listar usuarios ------------------------------------------------ */
+router.get(
+  '/',                       //  GET /api/usuarios
+  protect,
+  restrictTo('admin'),       // solo admins
+  usuarioController.getUsuarios
 );
 
 // @route   GET /api/usuarios/me

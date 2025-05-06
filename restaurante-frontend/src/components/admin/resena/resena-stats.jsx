@@ -2,7 +2,7 @@
 import { Star } from "lucide-react"
 import { Card, CardContent } from "../menu/card"
 
-export function ResenaStats({ resenas }) {
+export default function ResenaStats({ resenas }) {
   // Calcular estadísticas
   const calcularEstadisticas = () => {
     if (!resenas.length) return { promedio: 0, total: 0, porEstrellas: [0, 0, 0, 0, 0] }
