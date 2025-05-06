@@ -283,31 +283,3 @@ exports.bulkDeleteOrdenes = async (req, res, next) => {
   }
 }
 
-/**
- * GET /api/ordenes/by-date-no-limit
- * Filtrar pedidos por rango de fechas sin límite de resultados (solo admin)
- */
-exports.getOrdersByDateNoLimit = async (req, res, next) => {
-  try {
-    const { start, end } = req.query;
-    if (!start || !end) {
-      return res.status(400).json({ message: 'Debes proporcionar start y end YYYY-MM-DD' });
-    }
-
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    endDate.setHours(23, 59, 59, 999); // Asegura que el final del día esté cubierto
-
-    const filter = { fecha: { $gte: startDate, $lte: endDate } };
-
-    const orders = await Orden.find(filter)
-      .sort({ fecha: -1 }) // Ordenar por fecha descendente
-      .populate('usuarioId', 'nombre apellido')
-      .populate('restauranteId', 'nombre')
-      .populate('articulos.menuItemId', 'nombre precio');
-
-    res.json({ data: orders });
-  } catch (err) {
-    next(err);
-  }
-};
