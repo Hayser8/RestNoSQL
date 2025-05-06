@@ -11,6 +11,6 @@ router.use('/resenas',       require('./resenas'));
 router.use('/testimonials', require('./testimonials')); 
 router.use('/stats',        require('./stats')); 
 router.use('/popular-dishes',  require('./popularDishes')); 
-
-
+router.use('/articulos-menu', require('./menu'));
+router.use('/export', require('./export'))
 module.exports = router;

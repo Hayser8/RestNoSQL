@@ -127,7 +127,7 @@ export function useCheckout() {
 
   // 5) Formateadores y manejadores
   const formatPrice = v =>
-    new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(v)
+    new Intl.NumberFormat('en-EN', { style: 'currency', currency: 'USD' }).format(v)
 
   const formatCardNumber = v =>
     v.replace(/\D/g, '').match(/.{1,4}/g)?.join(' ') || v

@@ -1,6 +1,5 @@
 // controllers/restauranteController.js
-
-const Restaurante = require('../models/Restaurante');
+const Restaurante = require('../models/Restaurante')
 
 /**
  * GET /api/restaurantes
@@ -8,12 +7,12 @@ const Restaurante = require('../models/Restaurante');
  */
 exports.getAllRestaurantes = async (req, res, next) => {
   try {
-    const restaurantes = await Restaurante.find();
-    res.json(restaurantes);
+    const restaurantes = await Restaurante.find()
+    res.json(restaurantes)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 /**
  * GET /api/restaurantes/:id
@@ -21,52 +20,53 @@ exports.getAllRestaurantes = async (req, res, next) => {
  */
 exports.getRestauranteById = async (req, res, next) => {
   try {
-    const restaurante = await Restaurante.findById(req.params.id);
+    const restaurante = await Restaurante.findById(req.params.id)
     if (!restaurante) {
-      return res.status(404).json({ message: 'Restaurante no encontrado' });
+      return res.status(404).json({ message: 'Restaurante no encontrado' })
     }
-    res.json(restaurante);
+    res.json(restaurante)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
-/**
- * POST /api/restaurantes
- * Crear nueva sucursal (solo admin)
- */
 exports.createRestaurante = async (req, res, next) => {
   try {
-    // Desestructuramos con valores por defecto
     const {
       nombre = '',
       direccion = '',
-      ubicacion = {},
+      ubicacion,
       telefono = '',
       email = '',
       horario = []
-    } = req.body;
-    const { lat, lng } = ubicacion;
+    } = req.body
 
-    // Llamamos siempre a Restaurante.create, incluso si body está vacío
+    // Validación manual de ubicacion
+    if (!ubicacion || typeof ubicacion.lat !== 'number' || typeof ubicacion.lng !== 'number') {
+      return res.status(400).json({ 
+        errors: { ubicacion: 'Latitud y longitud obligatorias y numéricas' } 
+      })
+    }
+
     const newRestaurante = await Restaurante.create({
       nombre: nombre.trim(),
       direccion: direccion.trim(),
-      ubicacion: { lat, lng },
+      ubicacion: { lat: ubicacion.lat, lng: ubicacion.lng },
       telefono: telefono.trim(),
       email: email.trim(),
       horario: horario.map(h => ({
-        dia: h.dia ? h.dia.trim() : '',
-        apertura: h.apertura ? h.apertura.trim() : '',
-        cierre: h.cierre ? h.cierre.trim() : ''
+        dia: h.dia?.trim() || '',
+        apertura: h.apertura?.trim() || '',
+        cierre: h.cierre?.trim() || ''
       }))
-    });
+    })
 
-    res.status(201).json(newRestaurante);
+    res.status(201).json(newRestaurante)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
+
 
 /**
  * PUT /api/restaurantes/:id
@@ -74,41 +74,41 @@ exports.createRestaurante = async (req, res, next) => {
  */
 exports.updateRestaurante = async (req, res, next) => {
   try {
-    const updates = {};
-    const body = req.body;
+    const updates = {}
+    const body = req.body
 
-    if (body.nombre       !== undefined) updates.nombre      = body.nombre.trim();
-    if (body.direccion    !== undefined) updates.direccion   = body.direccion.trim();
-    if (body.telefono     !== undefined) updates.telefono    = body.telefono.trim();
-    if (body.email        !== undefined) updates.email       = body.email.trim();
+    if (body.nombre       !== undefined) updates.nombre      = body.nombre.trim()
+    if (body.direccion    !== undefined) updates.direccion   = body.direccion.trim()
+    if (body.telefono     !== undefined) updates.telefono    = body.telefono.trim()
+    if (body.email        !== undefined) updates.email       = body.email.trim()
     if (body.ubicacion) {
-      updates.ubicacion = {};
-      if (body.ubicacion.lat !== undefined) updates.ubicacion.lat = body.ubicacion.lat;
-      if (body.ubicacion.lng !== undefined) updates.ubicacion.lng = body.ubicacion.lng;
+      updates.ubicacion = {}
+      if (body.ubicacion.lat !== undefined) updates.ubicacion.lat = body.ubicacion.lat
+      if (body.ubicacion.lng !== undefined) updates.ubicacion.lng = body.ubicacion.lng
     }
     if (body.horario) {
       updates.horario = body.horario.map(h => ({
         dia: h.dia.trim(),
         apertura: h.apertura.trim(),
         cierre: h.cierre.trim()
-      }));
+      }))
     }
 
     const updated = await Restaurante.findByIdAndUpdate(
       req.params.id,
       updates,
       { new: true, runValidators: true }
-    );
+    )
 
     if (!updated) {
-      return res.status(404).json({ message: 'Restaurante no encontrado' });
+      return res.status(404).json({ message: 'Restaurante no encontrado' })
     }
 
-    res.json(updated);
+    res.json(updated)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 /**
  * DELETE /api/restaurantes/:id
@@ -116,12 +116,12 @@ exports.updateRestaurante = async (req, res, next) => {
  */
 exports.deleteRestaurante = async (req, res, next) => {
   try {
-    const deleted = await Restaurante.findByIdAndDelete(req.params.id);
+    const deleted = await Restaurante.findByIdAndDelete(req.params.id)
     if (!deleted) {
-      return res.status(404).json({ message: 'Restaurante no encontrado' });
+      return res.status(404).json({ message: 'Restaurante no encontrado' })
     }
-    res.json({ message: 'Restaurante eliminado correctamente' });
+    res.json({ message: 'Restaurante eliminado correctamente' })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}

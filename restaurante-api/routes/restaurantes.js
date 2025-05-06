@@ -1,45 +1,37 @@
-const express = require('express');
-const { body, param, validationResult } = require('express-validator');
-const restauranteController = require('../controllers/restauranteController');
-const { protect, restrictTo } = require('../middlewares/auth');
+// routes/restaurantes.js
+const express = require('express')
+const { body, param, validationResult } = require('express-validator')
+const restauranteController = require('../controllers/restauranteController')
+const { protect, restrictTo } = require('../middlewares/auth')
 
-const router = express.Router();
+const router = express.Router()
 
-// Middleware helper para validación
+// Mapea errores de express-validator a { campo: mensaje }
 const validate = (checks) => [
   checks,
   (req, res, next) => {
-    const errors = validationResult(req);
+    const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      const formatted = errors.array().reduce((acc, { param, msg }) => {
+        acc[param] = msg
+        return acc
+      }, {})
+      return res.status(400).json({ errors: formatted })
     }
-    next();
+    next()
   }
-];
+]
 
-/**
- * @route   GET /api/restaurantes
- * @desc    Listar todas las sucursales
- * @access  Public
- */
-router.get('/', restauranteController.getAllRestaurantes);
+// Public: listar y obtener por ID
+router.get('/', restauranteController.getAllRestaurantes)
 
-/**
- * @route   GET /api/restaurantes/:id
- * @desc    Obtener sucursal por ID
- * @access  Public
- */
 router.get(
   '/:id',
   validate(param('id').isMongoId().withMessage('ID de restaurante inválido')),
   restauranteController.getRestauranteById
-);
+)
 
-/**
- * @route   POST /api/restaurantes
- * @desc    Crear nueva sucursal (solo admin)
- * @access  Private (admin)
- */
+// Privado (admin): crear
 router.post(
   '/',
   protect,
@@ -55,19 +47,14 @@ router.post(
   validate(body('horario.*.apertura').matches(/^\d{2}:\d{2}$/).withMessage('Hora de apertura inválida (HH:MM)')),
   validate(body('horario.*.cierre').matches(/^\d{2}:\d{2}$/).withMessage('Hora de cierre inválida (HH:MM)')),
   restauranteController.createRestaurante
-);
+)
 
-/**
- * @route   PUT /api/restaurantes/:id
- * @desc    Actualizar sucursal (solo admin)
- * @access  Private (admin)
- */
+// Privado (admin): actualizar
 router.put(
   '/:id',
   protect,
   restrictTo('admin'),
   validate(param('id').isMongoId().withMessage('ID de restaurante inválido')),
-  // Campos opcionales pero validados si vienen
   validate(body('nombre').optional().notEmpty().withMessage('El nombre no puede estar vacío')),
   validate(body('direccion').optional().notEmpty().withMessage('La dirección no puede estar vacía')),
   validate(body('ubicacion.lat').optional().isFloat().withMessage('Latitud inválida')),
@@ -75,20 +62,19 @@ router.put(
   validate(body('telefono').optional().notEmpty().withMessage('El teléfono no puede estar vacío')),
   validate(body('email').optional().isEmail().withMessage('Email inválido')),
   validate(body('horario').optional().isArray().withMessage('Horario debe ser un array')),
+  validate(body('horario.*.dia').optional().notEmpty().withMessage('Cada horario debe incluir el día')),
+  validate(body('horario.*.apertura').optional().matches(/^\d{2}:\d{2}$/).withMessage('Hora de apertura inválida (HH:MM)')),
+  validate(body('horario.*.cierre').optional().matches(/^\d{2}:\d{2}$/).withMessage('Hora de cierre inválida (HH:MM)')),
   restauranteController.updateRestaurante
-);
+)
 
-/**
- * @route   DELETE /api/restaurantes/:id
- * @desc    Eliminar sucursal (solo admin)
- * @access  Private (admin)
- */
+// Privado (admin): eliminar
 router.delete(
   '/:id',
   protect,
   restrictTo('admin'),
   validate(param('id').isMongoId().withMessage('ID de restaurante inválido')),
   restauranteController.deleteRestaurante
-);
+)
 
-module.exports = router;
+module.exports = router

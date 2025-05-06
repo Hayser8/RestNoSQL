@@ -41,9 +41,9 @@ export default function StatCards({ dateRange }) {
   if (!stats)  return null
 
   const formatCurrency = (v) =>
-    new Intl.NumberFormat("es-ES", {
+    new Intl.NumberFormat("en-EN", {
       style: "currency",
-      currency: "EUR",
+      currency: "USD",
     }).format(v)
 
   const formatChange = (v) => {

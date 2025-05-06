@@ -2,6 +2,7 @@ const express = require('express');
 const { body, param, validationResult } = require('express-validator');
 const resenaController = require('../controllers/resenaController');
 const { protect, restrictTo } = require('../middlewares/auth');
+const { getReviewStats } = require('../controllers/reviewStatsController')
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ router.get(
   protect,
   resenaController.getResenasByUser
 );
+
 
 // 2) GET /api/resenas/product/:menuItemId — Listar reseñas de un producto específico
 router.get(
@@ -50,6 +52,14 @@ router.get(
   restrictTo('admin'),
   resenaController.getResenas
 );
+
+// Nueva ruta para stats de reseñas (solo admin)
+router.get(
+  '/stats',
+  protect,
+  restrictTo('admin'),
+  getReviewStats
+)
 
 // 5) GET /api/resenas/:id — Obtener reseña por ID (admin)
 router.get(

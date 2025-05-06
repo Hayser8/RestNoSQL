@@ -1,10 +1,22 @@
 // routes/popularDishes.js
-const express = require('express');
-const { getPopularDishes } = require('../controllers/popularDishesController');
+const express = require('express')
+const { protect, restrictTo } = require('../middlewares/auth')
+const {
+  getPopularDishes,
+  getPopularDishesRange
+} = require('../controllers/popularDishesController')
 
-const router = express.Router();
+const router = express.Router()
 
-// GET /api/popular-dishes — devuelve los 3 platos más pedidos
-router.get('/', getPopularDishes);
+// Para landing (sin auth)
+router.get('/', getPopularDishes)
 
-module.exports = router;
+// Para dashboard (solo admin)
+router.get(
+  '/range',
+  protect,
+  restrictTo('admin'),
+  getPopularDishesRange
+)
+
+module.exports = router
