@@ -1,92 +1,77 @@
-const express = require('express');
-const { body, param, validationResult } = require('express-validator');
-const articuloController = require('../controllers/articuloController');
-const { protect, restrictTo } = require('../middlewares/auth');
+// routes/articulos-menu.js
 
-const router = express.Router();
+const express = require('express')
+const { body, param, validationResult } = require('express-validator')
+const ctrl = require('../controllers/articuloController')
+const { protect, restrictTo } = require('../middlewares/auth')
 
-// helper middleware para validar inputs
-const validate = (checks) => [
-  checks,
+const router = express.Router()
+
+// Validador genérico
+const validate = (check) => [
+  check,
   (req, res, next) => {
-    const errors = validationResult(req);
+    const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ errors: errors.array() })
     }
-    next();
+    next()
   }
-];
+]
 
-/**
- * @route   GET /api/articulos
- * @desc    Listar todos los artículos del menú
- * @access  Public
- */
-router.get('/', (req, res, next) => {
-  if (req.query.categoria) {
-    return articuloController.getArticulosByCategory(req, res, next)
-  }
-  return articuloController.getArticulos(req, res, next)
-})
+// Listar todos
+router.get('/', ctrl.getArticulos)
 
-/**
- * @route   GET /api/articulos/:id
- * @desc    Obtener un artículo por su ID
- * @access  Public
- */
+// Obtener por ID
 router.get(
   '/:id',
-  validate(param('id').isMongoId().withMessage('ID de artículo inválido')),
-  articuloController.getArticuloById
-);
+  validate(param('id').isMongoId().withMessage('ID inválido')),
+  ctrl.getArticuloById
+)
 
-/**
- * @route   POST /api/articulos
- * @desc    Crear un nuevo artículo (solo admin)
- * @access  Private (admin)
- */
+// Crear (admin)
 router.post(
   '/',
   protect,
   restrictTo('admin'),
-  validate(body('nombre').notEmpty().withMessage('El nombre es obligatorio')),
-  validate(body('descripcion').notEmpty().withMessage('La descripción es obligatoria')),
-  validate(body('precio').isFloat({ gt: 0 }).withMessage('El precio debe ser un número mayor que 0')),
-  validate(body('categoria').notEmpty().withMessage('La categoría es obligatoria')),
-  validate(body('imagen').isURL().withMessage('La imagen debe ser una URL válida')),
-  articuloController.createArticulo
-);
+  validate(body('nombre').notEmpty()),
+  validate(body('descripcion').notEmpty()),
+  validate(body('precio').isFloat({ gt: 0 })),
+  validate(body('categoria').notEmpty()),
+  validate(body('imagen').isURL()),
+  ctrl.createArticulo
+)
 
-/**
- * @route   PUT /api/articulos/:id
- * @desc    Actualizar un artículo existente (solo admin)
- * @access  Private (admin)
- */
+// Actualizar (admin)
 router.put(
   '/:id',
   protect,
   restrictTo('admin'),
-  validate(param('id').isMongoId().withMessage('ID de artículo inválido')),
-  // Los campos son opcionales al actualizar, pero si vienen, deben validarse
-  validate(body('nombre').optional().notEmpty().withMessage('El nombre no puede estar vacío')),
-  validate(body('descripcion').optional().notEmpty().withMessage('La descripción no puede estar vacía')),
-  validate(body('precio').optional().isFloat({ gt: 0 }).withMessage('El precio debe ser un número mayor que 0')),
-  validate(body('categoria').optional().notEmpty().withMessage('La categoría no puede estar vacía')),
-  validate(body('imagen').optional().isURL().withMessage('La imagen debe ser una URL válida')),
-  articuloController.updateArticulo
-);
+  validate(param('id').isMongoId()),
+  validate(body('nombre').optional().notEmpty()),
+  validate(body('descripcion').optional().notEmpty()),
+  validate(body('precio').optional().isFloat({ gt: 0 })),
+  validate(body('categoria').optional().notEmpty()),
+  validate(body('imagen').optional().isURL()),
+  ctrl.updateArticulo
+)
 
-/**
- * @route   DELETE /api/articulos/:id
- * @desc    Eliminar un artículo (solo admin)
- * @access  Private (admin)
- */
+// Eliminar (admin)
 router.delete(
   '/:id',
   protect,
   restrictTo('admin'),
-  validate(param('id').isMongoId().withMessage('ID de artículo inválido')),
-  articuloController.deleteArticulo
-);
+  validate(param('id').isMongoId()),
+  ctrl.deleteArticulo
+)
 
-module.exports = router;
+// Bulk-importar (admin)
+router.post(
+  '/bulk',
+  protect,
+  restrictTo('admin'),
+  validate(body().isArray().withMessage('Debe ser array')),
+  ctrl.bulkImport
+)
+
+module.exports = router

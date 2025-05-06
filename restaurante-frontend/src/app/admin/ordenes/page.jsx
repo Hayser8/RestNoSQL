@@ -20,10 +20,7 @@ export default function OrdersPage() {
   const [filters, setFilters] = useState({
     search: "",
     status: "",
-    dateRange: {
-      start: null,
-      end: null,
-    },
+    dateRange: { start: null, end: null },
     restaurant: "",
   })
 
@@ -32,49 +29,40 @@ export default function OrdersPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null)
 
-  // Simular carga de datos
+  // --- Fetch inicial de órdenes ---
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true)
       try {
         const token = localStorage.getItem("token")
-        if (!token) {
-          router.push("/login")
-          return
-        }
+        if (!token) return router.push("/login")
+
         const res = await fetch("http://localhost:5000/api/ordenes", {
           headers: { Authorization: `Bearer ${token}` },
         })
-        if (res.status === 401) {
-          router.push("/login")
-          return
-        }
-        if (!res.ok) {
-          throw new Error("Error al cargar pedidos")
-        }
+        if (res.status === 401) return router.push("/login")
+        if (!res.ok) throw new Error("Error al cargar pedidos")
+
         const data = await res.json()
-        // Mapear respuesta al shape que tu UI espera:
         const mapped = data.map((o) => ({
-          id:         o._id,
-          usuarioId:  o.usuarioId._id,
-          usuario:    `${o.usuarioId.nombre} ${o.usuarioId.apellido}`,
+          id: o._id,
+          usuarioId: o.usuarioId._id,
+          usuario: `${o.usuarioId.nombre} ${o.usuarioId.apellido}`,
           restauranteId: o.restauranteId._id,
-          restaurante:   o.restauranteId.nombre,
-          fecha:      new Date(o.fecha),
-          estado:     o.estado,
-          total:      o.total,
-          articulos:  o.articulos.map((a) => ({
+          restaurante: o.restauranteId.nombre,
+          fecha: new Date(o.fecha),
+          estado: o.estado,
+          total: o.total,
+          articulos: o.articulos.map((a) => ({
             menuItemId: a.menuItemId._id,
-            nombre:     a.menuItemId.nombre,
-            cantidad:   a.cantidad,
-            precio:     a.precio,
+            nombre: a.menuItemId.nombre,
+            cantidad: a.cantidad,
+            precio: a.precio,
           })),
         }))
         setOrders(mapped)
-        setFilteredOrders(mapped)
       } catch (err) {
         console.error(err)
-        // aquí podrías mostrar un mensaje de error global
       } finally {
         setLoading(false)
       }
@@ -82,116 +70,166 @@ export default function OrdersPage() {
     fetchOrders()
   }, [router])
 
-  // Aplicar filtros
+  // --- Aplicar filtros cada vez que cambian orders o filters ---
   useEffect(() => {
     let result = [...orders]
 
-    // Filtrar por búsqueda (ID o nombre de cliente)
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
+      const s = filters.search.toLowerCase()
       result = result.filter(
-        (order) => order.id.toLowerCase().includes(searchLower) || order.usuario.toLowerCase().includes(searchLower),
+        (o) =>
+          o.id.toLowerCase().includes(s) ||
+          o.usuario.toLowerCase().includes(s)
       )
     }
 
-    // Filtrar por estado
     if (filters.status) {
-      result = result.filter((order) => order.estado === filters.status)
+      result = result.filter((o) => o.estado === filters.status)
     }
 
-    // Filtrar por restaurante
     if (filters.restaurant) {
-      result = result.filter((order) => order.restauranteId === filters.restaurant)
+      result = result.filter(
+        (o) => o.restauranteId === filters.restaurant
+      )
     }
 
-    // Filtrar por rango de fechas
     if (filters.dateRange.start && filters.dateRange.end) {
       const start = new Date(filters.dateRange.start)
       const end = new Date(filters.dateRange.end)
-      end.setHours(23, 59, 59, 999) // Incluir todo el día final
-
-      result = result.filter((order) => {
-        const orderDate = new Date(order.fecha)
-        return orderDate >= start && orderDate <= end
-      })
+      end.setHours(23, 59, 59, 999)
+      result = result.filter(
+        (o) => o.fecha >= start && o.fecha <= end
+      )
     }
 
     setFilteredOrders(result)
-  }, [filters, orders])
+  }, [orders, filters])
 
-  // Manejar selección de órdenes
-  const handleSelectOrder = (orderId) => {
-    setSelectedOrders((prev) => {
-      if (prev.includes(orderId)) {
-        return prev.filter((id) => id !== orderId)
-      } else {
-        return [...prev, orderId]
-      }
-    })
-  }
+  // --- Selección individual y masiva ---
+  const handleSelectOrder = (id) =>
+    setSelectedOrders((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
 
   const handleSelectAll = (isSelected) => {
-    if (isSelected) {
-      setSelectedOrders(filteredOrders.map((order) => order.id))
-    } else {
-      setSelectedOrders([])
-    }
+    setSelectedOrders(isSelected ? filteredOrders.map((o) => o.id) : [])
   }
 
-  // Manejar edición en lote
+  // --- Bulk Edit: abre modal ---
   const handleBulkEdit = () => {
-    if (selectedOrders.length > 0) {
-      setIsBulkEditModalOpen(true)
-    }
+    if (selectedOrders.length) setIsBulkEditModalOpen(true)
   }
 
-  const handleBulkEditSubmit = (newStatus) => {
-    // En una aplicación real, esto sería una llamada a la API
-    const updatedOrders = orders.map((order) => {
-      if (selectedOrders.includes(order.id)) {
-        return { ...order, estado: newStatus }
+  // --- Bulk Edit Submit: llama a la API ---
+  const handleBulkEditSubmit = async (newStatus) => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) return router.push("/login")
+
+      const res = await fetch(
+        "http://localhost:5000/api/ordenes/bulk-status",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            orderIds: selectedOrders,
+            estado: newStatus,
+          }),
+        }
+      )
+      if (res.status === 401) return router.push("/login")
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.message || "Error actualizando órdenes")
       }
-      return order
-    })
 
-    setOrders(updatedOrders)
-    setIsBulkEditModalOpen(false)
-    setSelectedOrders([])
-  }
-
-  // Manejar eliminación en lote
-  const handleBulkDelete = () => {
-    if (selectedOrders.length > 0) {
-      setIsDeleteModalOpen(true)
+      // Actualizar estado en cliente
+      const updated = orders.map((o) =>
+        selectedOrders.includes(o.id)
+          ? { ...o, estado: newStatus }
+          : o
+      )
+      setOrders(updated)
+      setSelectedOrders([])
+      setIsBulkEditModalOpen(false)
+    } catch (err) {
+      console.error(err)
+      // Aquí podrías mostrar un toast o banner de error
     }
   }
 
-  const handleBulkDeleteConfirm = () => {
-    // En una aplicación real, esto sería una llamada a la API
-    const updatedOrders = orders.filter((order) => !selectedOrders.includes(order.id))
-    setOrders(updatedOrders)
-    setIsDeleteModalOpen(false)
-    setSelectedOrders([])
+  // --- Bulk Delete ---
+  const handleBulkDelete = () => {
+    if (selectedOrders.length) setIsDeleteModalOpen(true)
+  }
+  const handleBulkDeleteConfirm = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) return router.push("/login")
+
+      const res = await fetch(
+        "http://localhost:5000/api/ordenes/bulk",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ orderIds: selectedOrders }),
+        }
+      )
+      if (res.status === 401) return router.push("/login")
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.message || "Error eliminando órdenes")
+      }
+      const data = await res.json()
+      console.log(data.message)
+
+      // Actualizar UI: quitar del estado local
+      const remaining = orders.filter(
+        (o) => !selectedOrders.includes(o.id)
+      )
+      setOrders(remaining)
+      setSelectedOrders([])
+      setIsDeleteModalOpen(false)
+    } catch (err) {
+      console.error(err)
+      // aquí podrías mostrar un toast o banner de error
+    }
   }
 
-  // Manejar visualización de detalles
+  // --- Ver detalles ---
   const handleViewDetails = (orderId) => {
-    const orderDetails = orders.find((order) => order.id === orderId)
-    setSelectedOrderDetails(orderDetails)
+    const detail = orders.find((o) => o.id === orderId)
+    setSelectedOrderDetails(detail)
     setIsDetailsModalOpen(true)
   }
 
-  // Obtener restaurantes únicos para el filtro
-  const restaurants = [...new Set(orders.map((order) => order.restauranteId))].map((id) => {
-    const restaurant = orders.find((order) => order.restauranteId === id)
-    return { id, name: restaurant.restaurante }
+  // --- Lista de restaurantes para filtro ---
+  const restaurants = Array.from(
+    new Set(orders.map((o) => o.restauranteId))
+  ).map((id) => {
+    const r = orders.find((o) => o.restauranteId === id)
+    return { id, name: r.restaurante }
   })
 
   return (
     <AdminLayout>
-      <OrdersHeader selectedCount={selectedOrders.length} onBulkEdit={handleBulkEdit} onBulkDelete={handleBulkDelete} />
+      <OrdersHeader
+        selectedCount={selectedOrders.length}
+        onBulkEdit={handleBulkEdit}
+        onBulkDelete={handleBulkDelete}
+      />
 
-      <OrdersFilters filters={filters} setFilters={setFilters} restaurants={restaurants} />
+      <OrdersFilters
+        filters={filters}
+        setFilters={setFilters}
+        restaurants={restaurants}
+      />
 
       <OrdersTable
         orders={filteredOrders}
@@ -204,7 +242,7 @@ export default function OrdersPage() {
 
       {isBulkEditModalOpen && (
         <BulkEditModal
-          isOpen={isBulkEditModalOpen}
+          isOpen
           onClose={() => setIsBulkEditModalOpen(false)}
           onSubmit={handleBulkEditSubmit}
           selectedCount={selectedOrders.length}
@@ -213,7 +251,7 @@ export default function OrdersPage() {
 
       {isDeleteModalOpen && (
         <DeleteConfirmModal
-          isOpen={isDeleteModalOpen}
+          isOpen
           onClose={() => setIsDeleteModalOpen(false)}
           onConfirm={handleBulkDeleteConfirm}
           selectedCount={selectedOrders.length}
@@ -222,7 +260,7 @@ export default function OrdersPage() {
 
       {isDetailsModalOpen && selectedOrderDetails && (
         <OrderDetailsModal
-          isOpen={isDetailsModalOpen}
+          isOpen
           onClose={() => setIsDetailsModalOpen(false)}
           order={selectedOrderDetails}
         />

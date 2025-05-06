@@ -33,6 +33,8 @@ router.post(
   ordenController.createOrden
 )
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // GET /api/ordenes/by-date
 // Filtrar pedidos por rango de fechas y limitar resultados (solo admin)
@@ -93,6 +95,31 @@ router.put(
     .isIn(['confirmado', 'en preparación', 'entregado', 'cancelado'])
     .withMessage('Estado inválido')),
   ordenController.updateOrdenStatus
+)
+
+router.put(
+  '/bulk-status',
+  protect,
+  restrictTo('admin'),
+  validate(body('orderIds')
+    .isArray({ min: 1 })
+    .withMessage('orderIds debe ser un array con al menos un ID')),
+  validate(body('estado')
+    .isIn(['pendiente', 'confirmado', 'en preparación', 'entregado', 'cancelado'])
+    .withMessage('Estado inválido')),
+  ordenController.bulkUpdateOrdenStatus
+);
+
+router.delete(
+  '/bulk',
+  protect,
+  restrictTo('admin'),
+  validate(
+    body('orderIds')
+      .isArray({ min: 1 })
+      .withMessage('orderIds debe ser un array con al menos un ID')
+  ),
+  ordenController.bulkDeleteOrdenes
 )
 
 ////////////////////////////////////////////////////////////////////////////////

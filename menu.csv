@@ -1,0 +1,8 @@
+"nombre","descripcion","precio","categoria","imagen"
+"Prueba 1","Articulo de prueba, con coma para test","0.00","Prueba","https://example.com/prueba1.jpg"
+"Prueba 2","Delicioso taco con pina, cilantro y cebolla","1.50","Tacos","https://example.com/img/taco-pastor.jpg"
+"Enchilada verde","Enchilada rellena de pollo banada en salsa verde","2.25","Enchiladas","https://example.com/img/enchilada-verde.jpg"
+"Agua de jamaica 23","Bebida refrescante de flor de jamaica endulzada al gusto","1.00","Bebidas","https://example.com/img/agua-jamaica.jpg"
+"Quesadilla de flor de calabaza 23","Quesadilla rellena de flor de calabaza y queso Oaxaca","1.75","Quesadillas","https://example.com/img/quesadilla-flor.jpg"
+"Chiles rellenos 23","Chiles poblanos rellenos de queso manchego","3.00","Especialidades","https://example.com/img/chiles-rellenos.jpg"
+"Gordita de chicharron 23","Gordita gruesa rellena de chicharron prensado y salsa roja","2.00","Gorditas","https://example.com/img/gordita-chicharron.jpg"

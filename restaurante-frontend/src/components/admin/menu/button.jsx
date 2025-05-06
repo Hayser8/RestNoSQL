@@ -6,7 +6,7 @@ export function Button({ children, variant = "primary", size = "md", className =
       secondary: "bg-gray-200 hover:bg-gray-300 text-gray-800",
       danger: "bg-red-600 hover:bg-red-700 text-white",
       success: "bg-green-600 hover:bg-green-700 text-white",
-      outline: "border border-gray-300 hover:bg-gray-100",
+      outline: "text-gray-600 border border-gray-300 hover:bg-gray-100",
       ghost: "hover:bg-gray-100",
     }
   

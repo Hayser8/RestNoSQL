@@ -64,6 +64,7 @@ exports.getAllOrders = async (req, res, next) => {
       .sort({ fecha: -1 })
       .populate('usuarioId', 'nombre apellido email')
       .populate('restauranteId', 'nombre')
+      .populate('articulos.menuItemId', 'nombre precio')
 
     if (limit > 0) query = query.limit(limit)
 
@@ -157,5 +158,63 @@ exports.getOrdersByDate = async (req, res, next) => {
     res.json(orders)
   } catch (err) {
     next(err)
+  }
+}
+
+/**
+ * PUT /api/ordenes/bulk-status
+ * Actualiza el estado de múltiples órdenes
+ * Body: { orderIds: [String], estado: String }
+ */
+exports.bulkUpdateOrdenStatus = async (req, res, next) => {
+  try {
+    const { orderIds, estado } = req.body;
+
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ message: 'Debes enviar al menos un orderId' });
+    }
+    // Aseguramos sólo estos estados válidos
+    const estadosPermitidos = ['pendiente', 'confirmado', 'en preparación', 'entregado', 'cancelado'];
+    if (!estadosPermitidos.includes(estado)) {
+      return res.status(400).json({ message: 'Estado inválido' });
+    }
+
+    const result = await Orden.updateMany(
+      { _id: { $in: orderIds } },
+      { $set: { estado } }
+    );
+
+    res.json({
+      message: `Se actualizaron ${result.nModified} órdenes.`,
+      modifiedCount: result.nModified
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+/**
+ * DELETE /api/ordenes/bulk
+ * Borra múltiples órdenes pasadas en orderIds
+ * Body: { orderIds: [String] }
+ */
+exports.bulkDeleteOrdenes = async (req, res, next) => {
+  try {
+    const { orderIds } = req.body
+
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ message: 'Debe enviar al menos un orderId' })
+    }
+
+    // deleteMany devuelve { deletedCount: n, ... }
+    const result = await Orden.deleteMany({ _id: { $in: orderIds } })
+
+    return res.json({
+      message: `Se eliminaron ${result.deletedCount} órdenes.`,
+      deletedCount: result.deletedCount
+    })
+  } catch (error) {
+    next(error)
   }
 }

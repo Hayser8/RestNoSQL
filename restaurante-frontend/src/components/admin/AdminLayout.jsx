@@ -10,12 +10,9 @@ export default function AdminLayout({ children }) {
   const navItems = [
     { name: "Dashboard", href: "/admin", icon: <Home className="w-5 h-5" /> },
     { name: "Menú", href: "/admin/menu", icon: <Menu className="w-5 h-5" /> },
-    { name: "Usuarios", href: "/admin/usuarios", icon: <Users className="w-5 h-5" /> },
     { name: "Órdenes", href: "/admin/ordenes", icon: <ShoppingBag className="w-5 h-5" /> },
     { name: "Reseñas", href: "/admin/resenas", icon: <Star className="w-5 h-5" /> },
     { name: "Restaurantes", href: "/admin/restaurantes", icon: <Store className="w-5 h-5" /> },
-    { name: "Reportes", href: "/admin/reportes", icon: <BarChart2 className="w-5 h-5" /> },
-    { name: "Configuración", href: "/admin/configuracion", icon: <Settings className="w-5 h-5" /> },
   ]
 
   return (

@@ -108,3 +108,53 @@ exports.getArticulosByCategory = async (req, res, next) => {
     next(error)
   }
 }
+
+/** POST /api/articulos-menu/bulk */
+exports.bulkImport = async (req, res, next) => {
+  try {
+    const items = req.body;
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Envía un array de artículos' });
+    }
+
+    const ops = items.map(item => {
+      const precio = parseFloat(item.precio);
+      if (
+        !item.nombre || typeof item.nombre !== 'string' ||
+        !item.descripcion || typeof item.descripcion !== 'string' ||
+        isNaN(precio) ||
+        !item.categoria || typeof item.categoria !== 'string' ||
+        !item.imagen || typeof item.imagen !== 'string'
+      ) {
+        throw new Error(`Validación fallida para el artículo: ${item.nombre || 'sin nombre'}`);
+      }
+
+      return {
+        updateOne: {
+          filter: { nombre: item.nombre.trim() },
+          update: {
+            $set: {
+              nombre: item.nombre.trim(),
+              descripcion: item.descripcion.trim(),
+              precio: precio,  // Ahora correctamente parseado como número
+              categoria: item.categoria.trim(),
+              imagen: item.imagen.trim()
+            }
+          },
+          upsert: true
+        }
+      };
+    });
+
+    await ArticuloMenu.bulkWrite(ops);
+
+    const nombres = items.map(i => i.nombre.trim());
+    const imported = await ArticuloMenu.find({ nombre: { $in: nombres } });
+
+    res.json(imported);
+  } catch (err) {
+    console.error('Bulk import error:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
