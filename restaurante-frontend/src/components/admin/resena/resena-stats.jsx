@@ -39,7 +39,7 @@ export default function ResenaStats({ resenas }) {
           <div className="flex flex-col items-center justify-center">
             <h3 className="text-lg font-medium text-gray-700 mb-2">Calificación promedio</h3>
             <div className="flex items-center mb-2">
-              <span className="text-4xl font-bold mr-2">{promedio.toFixed(1)}</span>
+              <span className="text-gray-500 text-4xl font-bold mr-2">{promedio.toFixed(1)}</span>
               <Star size={28} className="text-yellow-400 fill-yellow-400" />
             </div>
             <p className="text-sm text-gray-500">Basado en {total} reseñas</p>
@@ -47,7 +47,7 @@ export default function ResenaStats({ resenas }) {
 
           <div>
             <h3 className="text-lg font-medium text-gray-700 mb-4">Distribución</h3>
-            <div className="space-y-3">
+            <div className="text-gray-600 space-y-3">
               {[5, 4, 3, 2, 1].map((estrellas) => (
                 <div key={estrellas} className="flex items-center">
                   <div className="flex items-center w-24">

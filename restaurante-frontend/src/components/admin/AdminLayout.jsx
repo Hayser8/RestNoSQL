@@ -22,7 +22,7 @@ export default function AdminLayout({ children }) {
         <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200">
           <Link href="/admin" className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
-              BS
+              MR
             </div>
             <span className="ml-2 text-xl font-bold text-blue-900">Admin</span>
           </Link>
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }) {
         <div className="flex items-center justify-between h-16 px-4">
           <Link href="/admin" className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
-              BS
+              MR
             </div>
             <span className="ml-2 text-xl font-bold text-blue-900">Admin</span>
           </Link>

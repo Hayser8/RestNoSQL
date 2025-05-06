@@ -104,10 +104,9 @@ export default function OrdersFilters({ filters, setFilters, restaurants }) {
                 id="status-filter"
                 value={filters.status}
                 onChange={handleStatusChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Todos los estados</option>
-                <option value="pendiente">Pendiente</option>
                 <option value="confirmado">Confirmado</option>
                 <option value="en preparación">En preparación</option>
                 <option value="entregado">Entregado</option>
@@ -124,7 +123,7 @@ export default function OrdersFilters({ filters, setFilters, restaurants }) {
                 id="restaurant-filter"
                 value={filters.restaurant}
                 onChange={handleRestaurantChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Todos los restaurantes</option>
                 {restaurants.map((restaurant) => (
@@ -146,7 +145,7 @@ export default function OrdersFilters({ filters, setFilters, restaurants }) {
                   id="date-start"
                   value={filters.dateRange.start || ""}
                   onChange={handleStartDateChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -158,7 +157,7 @@ export default function OrdersFilters({ filters, setFilters, restaurants }) {
                   id="date-end"
                   value={filters.dateRange.end || ""}
                   onChange={handleEndDateChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>

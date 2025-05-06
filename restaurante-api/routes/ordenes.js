@@ -41,13 +41,13 @@ router.post(
 ////////////////////////////////////////////////////////////////////////////////
 router.get(
   '/by-date',
-  protect,
-  restrictTo('admin'),
-  validate(query('start').exists().isISO8601().withMessage('start debe ser YYYY-MM-DD')),
-  validate(query('end').exists().isISO8601().withMessage('end debe ser YYYY-MM-DD')),
-  validate(query('limit').optional().isInt({ gt: 0 }).withMessage('limit debe ser entero > 0')),
+  protect, restrictTo('admin'),
+  validate(query('start').isISO8601()),
+  validate(query('end').isISO8601()),
+  validate(query('page').optional().isInt({gt:0})),
+  validate(query('limit').optional().isInt({gt:0})),
   ordenController.getOrdersByDate
-)
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // GET /api/ordenes/me
@@ -65,11 +65,11 @@ router.get(
 ////////////////////////////////////////////////////////////////////////////////
 router.get(
   '/',
-  protect,
-  restrictTo('admin'),
-  validate(query('limit').optional().isInt({ gt: 0 }).withMessage('limit debe ser entero > 0')),
+  protect, restrictTo('admin'),
+  validate(query('page').optional().isInt({gt:0})),
+  validate(query('limit').optional().isInt({gt:0})),
   ordenController.getAllOrders
-)
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // GET /api/ordenes/:id

@@ -68,6 +68,9 @@ router.put(
   restauranteController.updateRestaurante
 )
 
+router.post('/:id/horario', restauranteController.addHorario);       // $push
+router.delete('/:id/horario/:dia', restauranteController.removeHorario);    // $pull
+
 // Privado (admin): eliminar
 router.delete(
   '/:id',

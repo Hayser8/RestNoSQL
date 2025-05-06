@@ -7,7 +7,7 @@ import { Textarea } from "../menu/textarea"
 import { Select } from "../menu/select"
 import { Button } from "../menu/button"
 
-export function ResenaForm({ resena, usuarios, restaurantes, ordenes, menuItems, onSave, onCancel }) {
+export default function ResenaForm({ resena, usuarios, restaurantes, ordenes, menuItems, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     usuarioId: "",
     restauranteId: "",

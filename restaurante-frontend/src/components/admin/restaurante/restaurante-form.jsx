@@ -1,13 +1,21 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { X, Plus, Trash2 } from "lucide-react"
-import { Card, CardHeader, CardContent, CardFooter } from "./card"
-import { Input } from "./input"
-import { Button } from "./button"
+import { useState, useEffect } from "react";
+import { X, Plus, Trash2 } from "lucide-react";
+import { Card, CardHeader, CardContent, CardFooter } from "./card";
+import { Input } from "./input";
+import { Button } from "./button";
 
 export function RestauranteForm({ restaurante, onSave, onCancel }) {
-  const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+  const diasSemana = [
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+    "Domingo",
+  ];
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -25,16 +33,24 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
         cierre: "18:00",
       },
     ],
-  })
+  });
 
   useEffect(() => {
     if (restaurante) {
+      const lat =
+        restaurante.ubicacion.lat ??
+        restaurante.ubicacion.coordinates?.[1] ??
+        "";
+      const lng =
+        restaurante.ubicacion.lng ??
+        restaurante.ubicacion.coordinates?.[0] ??
+        "";
       setFormData({
         nombre: restaurante.nombre,
         direccion: restaurante.direccion,
         ubicacion: {
-          lat: restaurante.ubicacion.lat.toString(),
-          lng: restaurante.ubicacion.lng.toString(),
+          lat: lat.toString(),
+          lng: lng.toString(),
         },
         telefono: restaurante.telefono,
         email: restaurante.email,
@@ -47,48 +63,49 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
                 cierre: "18:00",
               },
             ],
-      })
+      });
     }
-  }, [restaurante])
+  }, [restaurante]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
 
     if (name.includes("ubicacion.")) {
-      const field = name.split(".")[1]
+      const field = name.split(".")[1];
       setFormData((prev) => ({
         ...prev,
         ubicacion: {
           ...prev.ubicacion,
           [field]: value,
         },
-      }))
+      }));
     } else {
       setFormData((prev) => ({
         ...prev,
         [name]: value,
-      }))
+      }));
     }
-  }
+  };
 
   const handleHorarioChange = (index, field, value) => {
     setFormData((prev) => {
-      const newHorario = [...prev.horario]
+      const newHorario = [...prev.horario];
       newHorario[index] = {
         ...newHorario[index],
         [field]: value,
-      }
+      };
       return {
         ...prev,
         horario: newHorario,
-      }
-    })
-  }
+      };
+    });
+  };
 
   const addHorario = () => {
     // Encontrar el primer día que no está en el horario
-    const diasUsados = formData.horario.map((h) => h.dia)
-    const diaDisponible = diasSemana.find((dia) => !diasUsados.includes(dia)) || diasSemana[0]
+    const diasUsados = formData.horario.map((h) => h.dia);
+    const diaDisponible =
+      diasSemana.find((dia) => !diasUsados.includes(dia)) || diasSemana[0];
 
     setFormData((prev) => ({
       ...prev,
@@ -100,18 +117,18 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
           cierre: "18:00",
         },
       ],
-    }))
-  }
+    }));
+  };
 
   const removeHorario = (index) => {
     setFormData((prev) => ({
       ...prev,
       horario: prev.horario.filter((_, i) => i !== index),
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validación básica
     if (
@@ -123,15 +140,15 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
       !formData.email ||
       !formData.horario.length
     ) {
-      alert("Todos los campos son obligatorios")
-      return
+      alert("Todos los campos son obligatorios");
+      return;
     }
 
     // Validar email con regex
-    const emailRegex = /.+@.+\..+/
+    const emailRegex = /.+@.+\..+/;
     if (!emailRegex.test(formData.email)) {
-      alert("Por favor, ingrese un email válido")
-      return
+      alert("Por favor, ingrese un email válido");
+      return;
     }
 
     onSave({
@@ -141,13 +158,15 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
         lat: Number(formData.ubicacion.lat),
         lng: Number(formData.ubicacion.lng),
       },
-    })
-  }
+    });
+  };
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">{restaurante ? "Editar restaurante" : "Nuevo restaurante"}</h2>
+        <h2 className="text-xl font-bold">
+          {restaurante ? "Editar restaurante" : "Nuevo restaurante"}
+        </h2>
         <Button variant="ghost" size="sm" onClick={onCancel}>
           <X size={20} />
         </Button>
@@ -238,12 +257,17 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
               </div>
 
               {formData.horario.map((horario, index) => (
-                <div key={index} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 mb-3">
+                <div
+                  key={index}
+                  className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 mb-3"
+                >
                   <div>
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       value={horario.dia}
-                      onChange={(e) => handleHorarioChange(index, "dia", e.target.value)}
+                      onChange={(e) =>
+                        handleHorarioChange(index, "dia", e.target.value)
+                      }
                     >
                       {diasSemana.map((dia) => (
                         <option key={dia} value={dia}>
@@ -257,7 +281,9 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
                       type="time"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       value={horario.apertura}
-                      onChange={(e) => handleHorarioChange(index, "apertura", e.target.value)}
+                      onChange={(e) =>
+                        handleHorarioChange(index, "apertura", e.target.value)
+                      }
                     />
                   </div>
                   <div>
@@ -265,7 +291,9 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
                       type="time"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       value={horario.cierre}
-                      onChange={(e) => handleHorarioChange(index, "cierre", e.target.value)}
+                      onChange={(e) =>
+                        handleHorarioChange(index, "cierre", e.target.value)
+                      }
                     />
                   </div>
                   <div>
@@ -295,5 +323,5 @@ export function RestauranteForm({ restaurante, onSave, onCancel }) {
         </CardFooter>
       </form>
     </Card>
-  )
+  );
 }

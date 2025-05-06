@@ -39,34 +39,43 @@ exports.createRestaurante = async (req, res, next) => {
       telefono = '',
       email = '',
       horario = []
-    } = req.body
+    } = req.body;
 
-    // Validación manual de ubicacion
-    if (!ubicacion || typeof ubicacion.lat !== 'number' || typeof ubicacion.lng !== 'number') {
-      return res.status(400).json({ 
-        errors: { ubicacion: 'Latitud y longitud obligatorias y numéricas' } 
-      })
+    /* ✔️  Validación */
+    if (
+      !ubicacion ||
+      typeof ubicacion.lat !== 'number' ||
+      typeof ubicacion.lng !== 'number'
+    ) {
+      return res.status(400).json({
+        errors: { ubicacion: 'Latitud y longitud obligatorias y numéricas' }
+      });
     }
 
+    /* ✔️  Conversión a GeoJSON Point */
+    const geoUbicacion = {
+      type: 'Point',
+      coordinates: [ ubicacion.lng, ubicacion.lat ]   // [lng, lat]
+    };
+
     const newRestaurante = await Restaurante.create({
-      nombre: nombre.trim(),
+      nombre:    nombre.trim(),
       direccion: direccion.trim(),
-      ubicacion: { lat: ubicacion.lat, lng: ubicacion.lng },
-      telefono: telefono.trim(),
-      email: email.trim(),
-      horario: horario.map(h => ({
-        dia: h.dia?.trim() || '',
+      ubicacion: geoUbicacion,                        // <-- aquí
+      telefono:  telefono.trim(),
+      email:     email.trim(),
+      horario:   horario.map(h => ({
+        dia:      h.dia?.trim()      || '',
         apertura: h.apertura?.trim() || '',
-        cierre: h.cierre?.trim() || ''
+        cierre:   h.cierre?.trim()   || ''
       }))
-    })
+    });
 
-    res.status(201).json(newRestaurante)
-  } catch (error) {
-    next(error)
+    res.status(201).json(newRestaurante);
+  } catch (err) {
+    next(err);
   }
-}
-
+};
 
 /**
  * PUT /api/restaurantes/:id
@@ -74,41 +83,45 @@ exports.createRestaurante = async (req, res, next) => {
  */
 exports.updateRestaurante = async (req, res, next) => {
   try {
-    const updates = {}
-    const body = req.body
+    const updates = {};
+    const body    = req.body;
 
-    if (body.nombre       !== undefined) updates.nombre      = body.nombre.trim()
-    if (body.direccion    !== undefined) updates.direccion   = body.direccion.trim()
-    if (body.telefono     !== undefined) updates.telefono    = body.telefono.trim()
-    if (body.email        !== undefined) updates.email       = body.email.trim()
+    if (body.nombre    !== undefined) updates.nombre    = body.nombre.trim();
+    if (body.direccion !== undefined) updates.direccion = body.direccion.trim();
+    if (body.telefono  !== undefined) updates.telefono  = body.telefono.trim();
+    if (body.email     !== undefined) updates.email     = body.email.trim();
+
+    /* ✔️  GeoJSON al actualizar */
     if (body.ubicacion) {
-      updates.ubicacion = {}
-      if (body.ubicacion.lat !== undefined) updates.ubicacion.lat = body.ubicacion.lat
-      if (body.ubicacion.lng !== undefined) updates.ubicacion.lng = body.ubicacion.lng
+      const { lat, lng } = body.ubicacion;
+      if (typeof lat === 'number' && typeof lng === 'number') {
+        updates.ubicacion = { type: 'Point', coordinates: [ lng, lat ] };
+      }
     }
+
     if (body.horario) {
       updates.horario = body.horario.map(h => ({
-        dia: h.dia.trim(),
+        dia:      h.dia.trim(),
         apertura: h.apertura.trim(),
-        cierre: h.cierre.trim()
-      }))
+        cierre:   h.cierre.trim()
+      }));
     }
 
     const updated = await Restaurante.findByIdAndUpdate(
       req.params.id,
       updates,
       { new: true, runValidators: true }
-    )
+    );
 
-    if (!updated) {
-      return res.status(404).json({ message: 'Restaurante no encontrado' })
-    }
+    if (!updated)
+      return res.status(404).json({ message: 'Restaurante no encontrado' });
 
-    res.json(updated)
-  } catch (error) {
-    next(error)
+    res.json(updated);
+  } catch (err) {
+    next(err);
   }
-}
+};
+
 
 /**
  * DELETE /api/restaurantes/:id
@@ -125,3 +138,43 @@ exports.deleteRestaurante = async (req, res, next) => {
     next(error)
   }
 }
+
+/* ------------------------------------------------------------------ *
+ *  POST /api/restaurantes/:id/horario   →  $push en el array         *
+ *  Body: { dia, apertura, cierre }                                   *
+ * ------------------------------------------------------------------ */
+exports.addHorario = async (req, res, next) => {
+  try {
+    const { dia, apertura, cierre } = req.body;
+    if (!dia || !apertura || !cierre)
+      return res.status(400).json({ message: 'Faltan campos' });
+
+    const result = await Restaurante.updateOne(
+      { _id: req.params.id },
+      { $push: { horario: { dia, apertura, cierre } } }
+    );
+
+    if (result.matchedCount === 0)
+      return res.status(404).json({ message: 'Restaurante no encontrado' });
+
+    res.json({ message: 'Día añadido', modifiedCount: result.modifiedCount });
+  } catch (err) { next(err); }
+};
+
+/* ------------------------------------------------------------------ *
+ *  DELETE /api/restaurantes/:id/horario/:dia   →  $pull              *
+ * ------------------------------------------------------------------ */
+exports.removeHorario = async (req, res, next) => {
+  try {
+    const { dia } = req.params;
+    const result = await Restaurante.updateOne(
+      { _id: req.params.id },
+      { $pull: { horario: { dia } } }
+    );
+
+    if (result.matchedCount === 0)
+      return res.status(404).json({ message: 'Restaurante no encontrado' });
+
+    res.json({ message: 'Día eliminado', modifiedCount: result.modifiedCount });
+  } catch (err) { next(err); }
+};

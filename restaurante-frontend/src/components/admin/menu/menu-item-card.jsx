@@ -28,7 +28,7 @@ export function MenuItemCard({ item, onEdit, onDelete }) {
           </h3>
           <div className="flex items-baseline text-gray-800">
             {/* Símbolo “Q” en tamaño base */}
-            <span className="text-base font-medium mr-1">Q</span>
+            <span className="text-base font-medium mr-1">$</span>
             {/* Precio en tamaño mayor */}
             <span className="text-xl font-bold">
               {item.precio.toFixed(2)}

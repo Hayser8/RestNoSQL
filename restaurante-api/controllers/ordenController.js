@@ -2,6 +2,18 @@
 
 const Orden = require('../models/Orden')
 
+
+
+/*──────────────────────────────────────────────
+  helper de paginación
+──────────────────────────────────────────────*/
+const getPagination = (req) => {
+  const limit = Math.max(parseInt(req.query.limit) || 30, 1); // default 30
+  const page  = Math.max(parseInt(req.query.page)  || 1, 1);
+  return { limit, skip: (page - 1) * limit };
+};
+
+
 /**
  * POST /api/ordenes
  */
@@ -54,26 +66,83 @@ exports.getMyOrders = async (req, res, next) => {
   }
 }
 
-/**
- * GET /api/ordenes?limit=5
- */
+/*──────────────────────────────────────────────
+  GET /api/ordenes?page&limit&q&status&restaurantId&start&end   (admin)
+──────────────────────────────────────────────*/
 exports.getAllOrders = async (req, res, next) => {
   try {
-    const limit = parseInt(req.query.limit, 10) || 0
-    let query = Orden.find()
-      .sort({ fecha: -1 })
-      .populate('usuarioId', 'nombre apellido email')
-      .populate('restauranteId', 'nombre')
-      .populate('articulos.menuItemId', 'nombre precio')
+    const { q, status, restaurantId, start, end } = req.query;
+    const { limit, skip } = getPagination(req);
 
-    if (limit > 0) query = query.limit(limit)
+    /* crea match dinámico */
+    const match = {};
+    if (status)          match.estado        = status;
+    if (restaurantId)    match.restauranteId = restaurantId;
+    if (start && end) {
+      const s = new Date(start);
+      const e = new Date(end); e.setHours(23,59,59,999);
+      match.fecha = { $gte: s, $lte: e };
+    }
 
-    const ordenes = await query
-    res.json(ordenes)
-  } catch (error) {
-    next(error)
-  }
-}
+    /* pipeline con lookup para buscar por nombre del usuario */
+    const pipeline = [
+      { $match: match },
+      { $lookup: {              // une con usuarios
+          from: 'usuarios',
+          localField: 'usuarioId',
+          foreignField: '_id',
+          as: 'usr'
+        }
+      },
+      { $unwind: '$usr' }
+    ];
+
+    /* búsqueda (q) por id o nombre */
+    if (q && q.trim()) {
+      const term = q.trim();
+      const or = [
+        { _id: Types.ObjectId.isValid(term) ? new Types.ObjectId(term) : null },
+        { 'usr.nombre'  : { $regex: term, $options: 'i' } },
+        { 'usr.apellido': { $regex: term, $options: 'i' } }
+      ];
+      pipeline.push({ $match: { $or: or } });
+    }
+
+    /* total antes de paginar */
+    const [{ total = 0 } = {}] = await Orden.aggregate([
+      ...pipeline,
+      { $count: 'total' }
+    ]);
+
+    /* paginación */
+    pipeline.push(
+      { $sort: { fecha: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      // vuelca campos necesarios
+      { $lookup: {
+          from: 'restaurantes',
+          localField: 'restauranteId',
+          foreignField: '_id',
+          as: 'rest'
+        }
+      },
+      { $unwind: '$rest' },
+      { $lookup: {
+          from: 'articulosmenus',   // nombre real de la colección
+          localField: 'articulos.menuItemId',
+          foreignField: '_id',
+          as: 'items'
+        }
+      }
+    );
+
+    const orders = await Orden.aggregate(pipeline);
+
+    res.json({ data: orders, total });
+  } catch (err) { next(err); }
+};
+
 
 /**
  * GET /api/ordenes/:id
@@ -126,40 +195,35 @@ exports.deleteOrden = async (req, res, next) => {
   }
 }
 
-/**
- * GET /api/ordenes/by-date?start=YYYY-MM-DD&end=YYYY-MM-DD&limit=5
- */
+/*──────────────────────────────────────────────
+  GET /api/ordenes/by-date?start&end&limit&page
+──────────────────────────────────────────────*/
 exports.getOrdersByDate = async (req, res, next) => {
   try {
-    const { start, end, limit } = req.query
+    const { start, end } = req.query;
+    if (!start || !end)
+      return res.status(400).json({ message:'Debes proporcionar start y end YYYY-MM-DD' });
 
-    if (!start || !end) {
-      return res.status(400).json({
-        message: 'Debes proporcionar `start` y `end` en formato YYYY-MM-DD'
-      })
-    }
+    const { limit, skip } = getPagination(req);
+    const startDate = new Date(start);
+    const endDate   = new Date(end); endDate.setHours(23,59,59,999);
 
-    const startDate = new Date(start)
-    const endDate   = new Date(end)
-    endDate.setHours(23, 59, 59, 999)
+    const filter = { fecha:{ $gte:startDate, $lte:endDate } };
 
-    let query = Orden.find({
-      fecha: { $gte: startDate, $lte: endDate }
-    })
-      .sort({ fecha: -1 })
-      .populate('usuarioId', 'nombre apellido')
-      .populate('restauranteId', 'nombre')
-      .populate('articulos.menuItemId', 'nombre precio')
+    const [orders,total] = await Promise.all([
+      Orden.find(filter)
+        .sort({ fecha:-1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('usuarioId','nombre apellido')
+        .populate('restauranteId','nombre')
+        .populate('articulos.menuItemId','nombre precio'),
+      Orden.countDocuments(filter)
+    ]);
 
-    const lim = parseInt(limit, 10) || 0
-    if (lim > 0) query = query.limit(lim)
-
-    const orders = await query
-    res.json(orders)
-  } catch (err) {
-    next(err)
-  }
-}
+    res.json({ data: orders, total });
+  } catch (err) { next(err); }
+};
 
 /**
  * PUT /api/ordenes/bulk-status

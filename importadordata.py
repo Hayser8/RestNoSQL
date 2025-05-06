@@ -1,32 +1,38 @@
 #!/usr/bin/env python3
 # seed_mongo.py
+#
+# ─────────────────────────────────────────────────────────────────────
+#   Precarga masiva:
+#     •  5 restaurantes con GeoJSON Point
+#     • 10 000 usuarios
+#     • 50 000 órdenes (repartidas en los últimos 12 meses)
+#     • 50 000 reseñas
+# ─────────────────────────────────────────────────────────────────────
 
 import random
-import datetime
+from datetime import datetime, timedelta, timezone
+
 from pymongo import MongoClient
-from datetime import timezone
 
-# —————————————————————————————————————————
-# CONFIGURA TU URI AQUÍ
-MONGO_URI = "mongodb+srv://garciasalasperezjulio:1234@lab1.ka8t9.mongodb.net/Restaurante?retryWrites=true&w=majority"
-
+# ───────────────────────────────── CONFIGURA TU URI ─────────────────────────────
+MONGO_URI = (
+    "mongodb+srv://garciasalasperezjulio:1234@lab1.ka8t9.mongodb.net/"
+    "Restaurante?retryWrites=true&w=majority"
+)
 client = MongoClient(MONGO_URI)
 db = client.get_database()
 
-# —————————————————————————————————————————
-# PARÁMETROS DE CANTIDAD
-N_USUARIOS = 10000
-N_ORDENES  = 1000
-N_RESENAS  = 50000
+# ───────────────────────────────── PARÁMETROS ───────────────────────────────────
+N_USUARIOS = 10_000
+N_ORDENES  = 50_000           # ← 50 k
+N_RESENAS  = 50_000
 
-# —————————————————————————————————————————
-# DATOS DE EJEMPLO
+# ───────────────────────────────── DATOS DE EJEMPLO ────────────────────────────
 calles    = ["Av. Principal", "Calle Secundaria", "Paseo de la Reforma", "Camino Real"]
 ciudades  = ["Madrid", "Barcelona", "Valencia", "Sevilla", "Bilbao"]
 nombres   = ["María", "Juan", "Ana", "Luis", "Carmen", "Carlos", "Lucía", "Miguel"]
 apellidos = ["García", "Rodríguez", "Martínez", "López", "Sánchez", "Pérez"]
 
-# Plantillas de comentarios
 plantillas_platillo = [
     "{} estuvieron increíbles!",
     "Los {} me encantaron, repetiré seguro.",
@@ -42,8 +48,15 @@ plantillas_pedido = [
     "Repetiré mi pedido completo sin duda."
 ]
 
-# —————————————————————————————————————————
-# 1) INSERTAR 5 RESTAURANTES
+now   = datetime.now(timezone.utc)
+start = now - timedelta(days=365)          # 1 año atrás
+
+def rand_date():
+    """Fecha aleatoria entre start y now (aware UTC)."""
+    delta = now - start
+    return start + timedelta(seconds=random.randint(0, int(delta.total_seconds())))
+
+# ───────────────────────────────── 1) RESTAURANTES ─────────────────────────────
 restaurantes_info = [
     "Mamis Restaurant - Centro",
     "Mamis Restaurant - Norte",
@@ -56,30 +69,30 @@ for nombre in restaurantes_info:
     doc = {
         "nombre": nombre,
         "direccion": f"{random.randint(1,200)} {random.choice(calles)}, {random.choice(ciudades)}",
-        "ubicacion": {
-            "lat": round(random.uniform(-90,90),6),
-            "lng": round(random.uniform(-180,180),6)
+        "ubicacion": {                                # GeoJSON Point ✔️
+            "type": "Point",
+            "coordinates": [
+                round(random.uniform(-180, 180), 6),  # lng
+                round(random.uniform(-90,  90), 6)    # lat
+            ]
         },
         "telefono": f"+34 {random.randint(600,799)}-{random.randint(100,999)}-{random.randint(100,999)}",
         "email": f"info@{nombre.lower().replace(' ', '')}.com",
         "horario": [
-            {"dia":"Lunes","apertura":"10:00","cierre":"22:00"},
-            {"dia":"Martes","apertura":"10:00","cierre":"22:00"},
-            {"dia":"Miércoles","apertura":"10:00","cierre":"22:00"},
-            {"dia":"Jueves","apertura":"10:00","cierre":"22:00"},
-            {"dia":"Viernes","apertura":"10:00","cierre":"23:00"},
-            {"dia":"Sábado","apertura":"11:00","cierre":"23:00"},
-            {"dia":"Domingo","apertura":"12:00","cierre":"21:00"}
+            {"dia":"Lunes",     "apertura":"10:00", "cierre":"22:00"},
+            {"dia":"Martes",    "apertura":"10:00", "cierre":"22:00"},
+            {"dia":"Miércoles", "apertura":"10:00", "cierre":"22:00"},
+            {"dia":"Jueves",    "apertura":"10:00", "cierre":"22:00"},
+            {"dia":"Viernes",   "apertura":"10:00", "cierre":"23:00"},
+            {"dia":"Sábado",    "apertura":"11:00", "cierre":"23:00"},
+            {"dia":"Domingo",   "apertura":"12:00", "cierre":"21:00"}
         ]
     }
-    rid = db.restaurantes.insert_one(doc).inserted_id
-    resto_ids.append(rid)
+    resto_ids.append(db.restaurantes.insert_one(doc).inserted_id)
 print(f"{len(resto_ids)} restaurantes insertados.")
 
-# —————————————————————————————————————————
-# 2) CREAR USUARIOS FIJOS + ALEATORIOS
+# ───────────────────────────────── 2) USUARIOS ─────────────────────────────────
 usuarios = [
-    # Julio y Sofi
     {
       "nombre": "Julio",
       "apellido": "García",
@@ -87,7 +100,7 @@ usuarios = [
       "password": "1234",
       "rol": "admin",
       "nit": "12345678",
-      "fechaRegistro": datetime.datetime.now(timezone.utc)
+      "fechaRegistro": now
     },
     {
       "nombre": "Sofi",
@@ -96,10 +109,9 @@ usuarios = [
       "password": "1234",
       "rol": "admin",
       "nit": "87654321",
-      "fechaRegistro": datetime.datetime.now(timezone.utc)
+      "fechaRegistro": now
     }
 ]
-# Usuarios aleatorios
 for i in range(N_USUARIOS):
     usuarios.append({
         "nombre": random.choice(nombres),
@@ -107,22 +119,19 @@ for i in range(N_USUARIOS):
         "email": f"user{i}@ejemplo.com",
         "telefono": f"+34 {random.randint(600,799)}-{random.randint(100,999)}-{random.randint(100,999)}",
         "direccion": f"{random.randint(1,500)} {random.choice(calles)}, {random.choice(ciudades)}",
-        "nit": str(random.randint(10_000_000,99_999_999)),
-        "fechaRegistro": datetime.datetime.now(timezone.utc),
+        "nit": str(random.randint(10_000_000, 99_999_999)),
+        "fechaRegistro": rand_date(),
         "password": "HASHED_PASSWORD_PLACEHOLDER",
-        "rol": random.choice(["admin","user"])
+        "rol": random.choice(["admin", "user"])
     })
-res = db.usuarios.insert_many(usuarios)
-user_ids = res.inserted_ids
+user_ids = db.usuarios.insert_many(usuarios).inserted_ids
 print(f"{len(user_ids)} usuarios insertados.")
 
-# —————————————————————————————————————————
-# 3) CARGAR ARTÍCULOS DEL MENÚ YA EXISTENTES
+# ───────────────────────────────── 3) ARTÍCULOS MENÚ ───────────────────────────
 articulos = list(db.articulos_menu.find({}, {"_id":1,"nombre":1,"precio":1}))
 print(f"{len(articulos)} artículos del menú cargados.")
 
-# —————————————————————————————————————————
-# 4) GENERAR Y INSERTAR ÓRDENES
+# ───────────────────────────────── 4) ÓRDENES (50 k) ───────────────────────────
 ordenes_docs = []
 for _ in range(N_ORDENES):
     usr = random.choice(user_ids)
@@ -142,38 +151,39 @@ for _ in range(N_ORDENES):
     ordenes_docs.append({
         "usuarioId": usr,
         "restauranteId": rst,
-        "fecha": datetime.datetime.now(timezone.utc),
+        "fecha": rand_date(),                           # ← distribuido 12 meses
         "estado": random.choice(["confirmado","en preparación","entregado","cancelado"]),
-        "total": round(total,2),
+        "total": round(total, 2),
         "articulos": items
     })
-res = db.ordenes.insert_many(ordenes_docs)
-order_ids = res.inserted_ids
-order_map = list(zip(order_ids, ordenes_docs))
+
+# insertMany en lotes de 5 000 para no agotar RAM
+batch = 5000
+order_ids = []
+for i in range(0, len(ordenes_docs), batch):
+    part = ordenes_docs[i:i+batch]
+    order_ids.extend(db.ordenes.insert_many(part).inserted_ids)
 print(f"{len(order_ids)} órdenes insertadas.")
 
-# —————————————————————————————————————————
-# 5) GENERAR Y INSERTAR RESEÑAS
-ratings = [1, 2, 3, 4, 5]
-weights = [5, 10, 20, 40, 25]  # promedio ≈3.9
+order_map = list(zip(order_ids, ordenes_docs))   # para reseñas
 
-resenas = []
+# ───────────────────────────────── 5) RESEÑAS ──────────────────────────────────
+ratings  = [1, 2, 3, 4, 5]
+weights  = [5,10,20,40,25]   # promedio 3.9 aprox.
+
+resenas  = []
 for _ in range(N_RESENAS):
-    usr = random.choice(user_ids)
-    ord_id, ord_doc = random.choice(order_map)
-    rst = ord_doc["restauranteId"]
+    usr                = random.choice(user_ids)
+    ord_id, ord_doc    = random.choice(order_map)
+    rst                = ord_doc["restauranteId"]
 
-    # decidir si es reseña de plato (20%) o del pedido completo (80%)
-    if random.random() < 0.2:
-        art = random.choice(ord_doc["articulos"])
-        menu_item_id = art["menuItemId"]
-        # comentario dinámico para el platillo
-        plantilla = random.choice(plantillas_platillo)
-        comentario = plantilla.format(art["nombre"])
-    else:
-        menu_item_id = None
-        # comentario genérico para el pedido
-        comentario = random.choice(plantillas_pedido)
+    if random.random() < 0.2:                       # 20 % reseña de plato
+        art           = random.choice(ord_doc["articulos"])
+        menu_item_id  = art["menuItemId"]
+        comentario    = random.choice(plantillas_platillo).format(art["nombre"])
+    else:                                           # 80 % reseña del pedido
+        menu_item_id  = None
+        comentario    = random.choice(plantillas_pedido)
 
     resenas.append({
         "usuarioId": usr,
@@ -182,11 +192,14 @@ for _ in range(N_RESENAS):
         "menuItemId": menu_item_id,
         "calificacion": random.choices(ratings, weights)[0],
         "comentario": comentario,
-        "fecha": datetime.datetime.now(timezone.utc)
+        "fecha": rand_date()
     })
 
-res = db.resenas.insert_many(resenas)
-print(f"{len(res.inserted_ids)} reseñas insertadas.")
+# insertMany en lotes de 10 000
+batch = 10_000
+for i in range(0, len(resenas), batch):
+    db.resenas.insert_many(resenas[i:i+batch])
+print(f"{len(resenas)} reseñas insertadas.")
 
-# —————————————————————————————————————————
+# ───────────────────────────────── FIN ─────────────────────────────────────────
 print("✅ ¡Precarga completada!")
