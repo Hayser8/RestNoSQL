@@ -46,10 +46,29 @@ export default function RecentOrders({ startDate, endDate }) {
         if (!res.ok) {
           throw new Error("Error al cargar pedidos")
         }
-
-        const data = await res.json()
+        const data = await res.json();
+        console.log("Datos recibidos:", data); // Verifica lo que está llegando
+        console.log(data.data); 
+        
+        // Verifica si 'data.data' es un arreglo antes de usar .map()
+        if (Array.isArray(data.data)) {
+          setOrders(
+            data.data.map((o) => ({
+              id:         o._id,
+              customer:   `${o.usuarioId.nombre} ${o.usuarioId.apellido}`,
+              date:       new Date(o.fecha),
+              status:     o.estado.charAt(0).toUpperCase() + o.estado.slice(1),
+              total:      o.total,
+              items:      o.articulos.reduce((sum, it) => sum + it.cantidad, 0),
+              restaurant: o.restauranteId.nombre,
+            }))
+          );
+        } else {
+          console.error("Error: Datos no son un arreglo", data);
+          throw new Error("Datos inválidos recibidos desde el servidor");
+        }
         setOrders(
-          data.map((o) => ({
+          data.data.map((o) => ({
             id:         o._id,
             customer:   `${o.usuarioId.nombre} ${o.usuarioId.apellido}`,
             date:       new Date(o.fecha),
